@@ -17,14 +17,14 @@ export async function POST(request: NextRequest) {
   console.log(`[API:${requestId}] Timestamp: ${new Date().toISOString()}`);
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = request.headers.get("x-gemini-api-key") || process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       console.error(`[API:${requestId}] ❌ No API key configured`);
       return NextResponse.json<GenerateResponse>(
         {
           success: false,
-          error: "API key not configured. Add GEMINI_API_KEY to .env.local",
+          error: "API key not configured. Add GEMINI_API_KEY to .env.local or set it in the settings menu.",
         },
         { status: 500 }
       );

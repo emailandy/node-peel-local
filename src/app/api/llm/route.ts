@@ -28,15 +28,16 @@ async function generateWithGoogle(
   temperature: number,
   maxTokens: number,
   images?: string[],
-  requestId?: string
+  requestId?: string,
+  apiKey?: string | null
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  const finalApiKey = apiKey || process.env.GEMINI_API_KEY;
+  if (!finalApiKey) {
     logger.error('api.error', 'GEMINI_API_KEY not configured', { requestId });
     throw new Error("GEMINI_API_KEY not configured");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: finalApiKey });
   const modelId = GOOGLE_MODEL_MAP[model];
 
   logger.info('api.llm', 'Calling Google AI API', {
@@ -219,10 +220,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const apiKey = request.headers.get("x-gemini-api-key");
+
     let text: string;
 
     if (provider === "google") {
-      text = await generateWithGoogle(prompt, model, temperature, maxTokens, images, requestId);
+      text = await generateWithGoogle(prompt, model, temperature, maxTokens, images, requestId, apiKey);
     } else if (provider === "openai") {
       text = await generateWithOpenAI(prompt, model, temperature, maxTokens, images, requestId);
     } else {

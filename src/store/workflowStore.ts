@@ -57,6 +57,9 @@ interface WorkflowStore {
   groups: Record<string, NodeGroup>;
 
   // Settings
+  // Settings
+  apiKey: string | null;
+  setApiKey: (key: string | null) => void;
   setEdgeStyle: (style: EdgeStyle) => void;
 
   // Node operations
@@ -343,6 +346,17 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
   // Cost tracking initial state
   incurredCost: 0,
+
+  // Settings
+  apiKey: typeof window !== "undefined" ? localStorage.getItem("node-banana-api-key") : null,
+  setApiKey: (key: string | null) => {
+    if (key) {
+      localStorage.setItem("node-banana-api-key", key);
+    } else {
+      localStorage.removeItem("node-banana-api-key");
+    }
+    set({ apiKey: key });
+  },
 
   setEdgeStyle: (style: EdgeStyle) => {
     set({ edgeStyle: style });
@@ -690,12 +704,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodes: state.nodes.map((node) =>
         node.groupId === groupId
           ? {
-              ...node,
-              position: {
-                x: node.position.x + delta.x,
-                y: node.position.y + delta.y,
-              },
-            }
+            ...node,
+            position: {
+              x: node.position.x + delta.x,
+              y: node.position.y + delta.y,
+            },
+          }
           : node
       ) as WorkflowNode[],
       hasUnsavedChanges: true,
@@ -991,10 +1005,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                 prompt: text,
               });
 
+              const { apiKey } = get();
               const response = await fetch("/api/generate", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
+                  ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
                 },
                 body: JSON.stringify(requestPayload),
               });
@@ -1144,7 +1160,6 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
             try {
               const nodeData = node.data as LLMGenerateNodeData;
-
               logger.info('api.llm', 'Calling LLM API', {
                 nodeId: node.id,
                 provider: nodeData.provider,
@@ -1155,9 +1170,13 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                 prompt: text,
               });
 
+              const { apiKey } = get();
               const response = await fetch("/api/llm", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
+                },
                 body: JSON.stringify({
                   prompt: text,
                   ...(images.length > 0 && { images }),
