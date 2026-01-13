@@ -53,11 +53,11 @@ export function Header() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const workflow = JSON.parse(event.target?.result as string) as WorkflowFile;
         if (workflow.version && workflow.nodes && workflow.edges) {
-          loadWorkflow(workflow);
+          await loadWorkflow(workflow);
         } else {
           alert("Invalid workflow file format");
         }
@@ -71,13 +71,41 @@ export function Header() {
     e.target.value = "";
   };
 
-  const handleProjectSave = async (id: string, name: string, path: string, genPath: string | null) => {
-    setWorkflowMetadata(id, name, path, genPath);
+  const handleProjectSave = async (id: string, name: string, path: string) => {
+    setWorkflowMetadata(id, name, path); // generationsPath is auto-derived
     setShowProjectModal(false);
     // Small delay to let state update
     setTimeout(() => {
-      saveToFile();
+      saveToFile().catch((error) => {
+        console.error("Failed to save project:", error);
+        alert("Failed to save project. Please try again.");
+      });
     }, 50);
+  };
+
+  const handleOpenDirectory = async () => {
+    if (!saveDirectoryPath) return;
+
+    try {
+      const response = await fetch("/api/open-directory", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ path: saveDirectoryPath }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        console.error("Failed to open directory:", result.error);
+        alert(`Failed to open project folder: ${result.error || "Unknown error"}`);
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to open directory:", error);
+      alert("Failed to open project folder. Please try again.");
+    }
   };
 
   return (
@@ -135,6 +163,27 @@ export function Header() {
                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
                   )}
                 </button>
+                {saveDirectoryPath && (
+                  <button
+                    onClick={handleOpenDirectory}
+                    className="p-1 text-neutral-400 hover:text-neutral-200 transition-colors"
+                    title="Open Project Folder"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                      />
+                    </svg>
+                  </button>
+                )}
                 <button
                   onClick={handleOpenSettings}
                   className="p-1 text-neutral-400 hover:text-neutral-200 transition-colors"
@@ -219,7 +268,7 @@ export function Header() {
           </a>
           <span className="text-neutral-500">·</span>
           <a
-            href="https://discord.gg/zBzGbtfDfB"
+            href="https://discord.com/invite/89Nr6EKkTf"
             target="_blank"
             rel="noopener noreferrer"
             className="text-neutral-400 hover:text-neutral-200 transition-colors"

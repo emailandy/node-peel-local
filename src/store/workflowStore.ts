@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/components/Toast";
 import { calculateGenerationCost } from "@/utils/costCalculator";
 import { logger } from "@/utils/logger";
+import { externalizeWorkflowImages, hydrateWorkflowImages } from "@/utils/imageStorage";
 
 export type EdgeStyle = "angular" | "curved";
 
@@ -93,8 +94,10 @@ interface WorkflowStore {
   // UI State
   openModalCount: number;
   isModalOpen: boolean;
+  showQuickstart: boolean;
   incrementModalCount: () => void;
   decrementModalCount: () => void;
+  setShowQuickstart: (show: boolean) => void;
 
   // Execution
   isRunning: boolean;
@@ -106,7 +109,7 @@ interface WorkflowStore {
 
   // Save/Load
   saveWorkflow: (name?: string) => void;
-  loadWorkflow: (workflow: WorkflowFile) => void;
+  loadWorkflow: (workflow: WorkflowFile, workflowPath?: string) => Promise<void>;
   clearWorkflow: () => void;
 
   // Helpers
@@ -128,12 +131,14 @@ interface WorkflowStore {
   hasUnsavedChanges: boolean;
   autoSaveEnabled: boolean;
   isSaving: boolean;
+  useExternalImageStorage: boolean;  // Store images as separate files vs embedded base64
 
   // Auto-save actions
-  setWorkflowMetadata: (id: string, name: string, path: string, generationsPath: string | null) => void;
+  setWorkflowMetadata: (id: string, name: string, path: string, generationsPath?: string | null) => void;
   setWorkflowName: (name: string) => void;
   setGenerationsPath: (path: string | null) => void;
   setAutoSaveEnabled: (enabled: boolean) => void;
+  setUseExternalImageStorage: (enabled: boolean) => void;
   markAsUnsaved: () => void;
   saveToFile: () => Promise<boolean>;
   initializeAutoSave: () => void;
@@ -329,6 +334,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   groups: {},
   openModalCount: 0,
   isModalOpen: false,
+  showQuickstart: true,
   isRunning: false,
   currentNodeId: null,
   pausedAtNodeId: null,
@@ -343,6 +349,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   hasUnsavedChanges: false,
   autoSaveEnabled: true,
   isSaving: false,
+  useExternalImageStorage: true,  // Default: store images as separate files
 
   // Cost tracking initial state
   incurredCost: 0,
@@ -374,6 +381,10 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       const newCount = Math.max(0, state.openModalCount - 1);
       return { openModalCount: newCount, isModalOpen: newCount > 0 };
     });
+  },
+
+  setShowQuickstart: (show: boolean) => {
+    set({ showQuickstart: show });
   },
 
   addNode: (type: NodeType, position: XYPosition) => {
@@ -778,20 +789,14 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       return { valid: false, errors };
     }
 
-    // Check each Nano Banana node has required inputs
+    // Check each Nano Banana node has required inputs (text required, image optional)
     nodes
       .filter((n) => n.type === "nanoBanana")
       .forEach((node) => {
-        const imageConnected = edges.some(
-          (e) => e.target === node.id && e.targetHandle === "image"
-        );
         const textConnected = edges.some(
           (e) => e.target === node.id && e.targetHandle === "text"
         );
 
-        if (!imageConnected) {
-          errors.push(`Generate node "${node.id}" missing image input`);
-        }
         if (!textConnected) {
           errors.push(`Generate node "${node.id}" missing text input`);
         }
@@ -962,15 +967,13 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           case "nanoBanana": {
             const { images, text } = getConnectedInputs(node.id);
 
-            if (images.length === 0 || !text) {
-              logger.error('node.error', 'nanoBanana node missing inputs', {
+            if (!text) {
+              logger.error('node.error', 'nanoBanana node missing text input', {
                 nodeId: node.id,
-                hasImages: images.length > 0,
-                hasText: !!text,
               });
               updateNodeData(node.id, {
                 status: "error",
-                error: "Missing image or text input",
+                error: "Missing text input",
               });
               set({ isRunning: false, currentNodeId: null });
               await logger.endSession();
@@ -1406,15 +1409,13 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         let images = inputs.images.length > 0 ? inputs.images : nodeData.inputImages;
         let text = inputs.text ?? nodeData.inputPrompt;
 
-        if (!images || images.length === 0 || !text) {
-          logger.error('node.error', 'nanoBanana regeneration failed: missing inputs', {
+        if (!text) {
+          logger.error('node.error', 'nanoBanana regeneration failed: missing text input', {
             nodeId,
-            hasImages: !!(images && images.length > 0),
-            hasText: !!text,
           });
           updateNodeData(nodeId, {
             status: "error",
-            error: "Missing image or text input",
+            error: "Missing text input",
           });
           set({ isRunning: false, currentNodeId: null });
           await logger.endSession();
@@ -1777,7 +1778,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     URL.revokeObjectURL(url);
   },
 
-  loadWorkflow: (workflow: WorkflowFile) => {
+  loadWorkflow: async (workflow: WorkflowFile, workflowPath?: string) => {
     // Update nodeIdCounter to avoid ID collisions
     const maxNodeId = workflow.nodes.reduce((max, node) => {
       const match = node.id.match(/-(\d+)$/);
@@ -1802,20 +1803,34 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     const configs = loadSaveConfigs();
     const savedConfig = workflow.id ? configs[workflow.id] : null;
 
+    // Determine the workflow directory path (passed in or from saved config)
+    const directoryPath = workflowPath || savedConfig?.directoryPath;
+
+    // Hydrate images if we have a directory path and the workflow has image refs
+    let hydratedWorkflow = workflow;
+    if (directoryPath) {
+      try {
+        hydratedWorkflow = await hydrateWorkflowImages(workflow, directoryPath);
+      } catch (error) {
+        console.error("Failed to hydrate workflow images:", error);
+        // Continue with original workflow if hydration fails
+      }
+    }
+
     // Load cost data for this workflow
     const costData = workflow.id ? loadWorkflowCostData(workflow.id) : null;
 
     set({
-      nodes: workflow.nodes,
-      edges: workflow.edges,
-      edgeStyle: workflow.edgeStyle || "angular",
-      groups: workflow.groups || {},
+      nodes: hydratedWorkflow.nodes,
+      edges: hydratedWorkflow.edges,
+      edgeStyle: hydratedWorkflow.edgeStyle || "angular",
+      groups: hydratedWorkflow.groups || {},
       isRunning: false,
       currentNodeId: null,
       // Restore workflow ID and paths from localStorage if available
       workflowId: workflow.id || null,
       workflowName: workflow.name,
-      saveDirectoryPath: savedConfig?.directoryPath || null,
+      saveDirectoryPath: directoryPath || null,
       generationsPath: savedConfig?.generationsPath || null,
       lastSavedAt: savedConfig?.lastSavedAt || null,
       hasUnsavedChanges: false,
@@ -1859,12 +1874,16 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   },
 
   // Auto-save actions
-  setWorkflowMetadata: (id: string, name: string, path: string, generationsPath: string | null) => {
+  setWorkflowMetadata: (id: string, name: string, path: string, generationsPath?: string | null) => {
+    // Auto-derive generationsPath: use provided value, fall back to existing, then auto-derive
+    const currentGenPath = get().generationsPath;
+    const derivedGenerationsPath = generationsPath ?? currentGenPath ?? `${path}/generations`;
+
     set({
       workflowId: id,
       workflowName: name,
       saveDirectoryPath: path,
-      generationsPath: generationsPath,
+      generationsPath: derivedGenerationsPath,
     });
   },
 
@@ -1885,6 +1904,10 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({ autoSaveEnabled: enabled });
   },
 
+  setUseExternalImageStorage: (enabled: boolean) => {
+    set({ useExternalImageStorage: enabled });
+  },
+
   markAsUnsaved: () => {
     set({ hasUnsavedChanges: true });
   },
@@ -1898,6 +1921,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       workflowId,
       workflowName,
       saveDirectoryPath,
+      useExternalImageStorage,
     } = get();
 
     if (!workflowId || !workflowName || !saveDirectoryPath) {
@@ -1907,7 +1931,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({ isSaving: true });
 
     try {
-      const workflow: WorkflowFile = {
+      let workflow: WorkflowFile = {
         version: 1,
         id: workflowId,
         name: workflowName,
@@ -1916,6 +1940,11 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         edgeStyle,
         groups: Object.keys(groups).length > 0 ? groups : undefined,
       };
+
+      // If external image storage is enabled, externalize images before saving
+      if (useExternalImageStorage) {
+        workflow = await externalizeWorkflowImages(workflow, saveDirectoryPath);
+      }
 
       const response = await fetch("/api/workflow", {
         method: "POST",

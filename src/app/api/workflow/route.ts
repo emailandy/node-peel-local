@@ -3,6 +3,8 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { logger } from "@/utils/logger";
 
+export const maxDuration = 300; // 5 minute timeout for large workflow files
+
 // POST: Save workflow to file
 export async function POST(request: NextRequest) {
   let directoryPath: string | undefined;
@@ -53,6 +55,22 @@ export async function POST(request: NextRequest) {
         { success: false, error: "Directory does not exist" },
         { status: 400 }
       );
+    }
+
+    // Auto-create subfolders for inputs and generations
+    const inputsFolder = path.join(directoryPath, "inputs");
+    const generationsFolder = path.join(directoryPath, "generations");
+
+    try {
+      await fs.mkdir(inputsFolder, { recursive: true });
+      await fs.mkdir(generationsFolder, { recursive: true });
+    } catch (mkdirError) {
+      logger.warn('file.save', 'Failed to create subfolders (non-fatal)', {
+        inputsFolder,
+        generationsFolder,
+        error: mkdirError instanceof Error ? mkdirError.message : 'Unknown error',
+      });
+      // Continue anyway - folders may already exist or be created later
     }
 
     // Sanitize filename (remove special chars, ensure .json extension)

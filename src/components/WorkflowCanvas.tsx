@@ -35,6 +35,7 @@ import { GroupBackgroundsPortal, GroupControlsOverlay } from "./GroupsOverlay";
 import { NodeType, NanoBananaNodeData } from "@/types";
 import { detectAndSplitGrid } from "@/utils/gridSplitter";
 import { logger } from "@/utils/logger";
+import { WelcomeModal } from "./quickstart";
 
 const nodeTypes: NodeTypes = {
   imageInput: ImageInputNode,
@@ -187,7 +188,7 @@ const findScrollableAncestor = (target: HTMLElement, deltaX: number, deltaY: num
 };
 
 export function WorkflowCanvas() {
-  const { nodes, edges, groups, onNodesChange, onEdgesChange, onConnect, addNode, updateNodeData, loadWorkflow, getNodeById, addToGlobalHistory, setNodeGroupId, executeWorkflow, isModalOpen } =
+  const { nodes, edges, groups, onNodesChange, onEdgesChange, onConnect, addNode, updateNodeData, loadWorkflow, getNodeById, addToGlobalHistory, setNodeGroupId, executeWorkflow, isModalOpen, showQuickstart, setShowQuickstart } =
     useWorkflowStore();
   const { screenToFlowPosition, getViewport, zoomIn, zoomOut, setViewport } = useReactFlow();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -195,6 +196,9 @@ export function WorkflowCanvas() {
   const [connectionDrop, setConnectionDrop] = useState<ConnectionDropState | null>(null);
   const [isSplitting, setIsSplitting] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+
+  // Detect if canvas is empty for showing quickstart
+  const isCanvasEmpty = nodes.length === 0;
 
   // Just pass regular nodes to React Flow - groups are rendered separately
   const allNodes = useMemo(() => {
@@ -988,11 +992,11 @@ export function WorkflowCanvas() {
       if (jsonFiles.length > 0) {
         const file = jsonFiles[0];
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
           try {
             const workflow = JSON.parse(e.target?.result as string) as WorkflowFile;
             if (workflow.version && workflow.nodes && workflow.edges) {
-              loadWorkflow(workflow);
+              await loadWorkflow(workflow);
             } else {
               alert("Invalid workflow file format");
             }
@@ -1077,6 +1081,17 @@ export function WorkflowCanvas() {
         </div>
       )}
 
+      {/* Welcome Modal */}
+      {isCanvasEmpty && showQuickstart && (
+        <WelcomeModal
+          onWorkflowGenerated={async (workflow) => {
+            await loadWorkflow(workflow);
+            setShowQuickstart(false);
+          }}
+          onClose={() => setShowQuickstart(false)}
+        />
+      )}
+
       <ReactFlow
         nodes={allNodes}
         edges={edges}
@@ -1106,6 +1121,7 @@ export function WorkflowCanvas() {
         nodesConnectable={!isModalOpen}
         elementsSelectable={!isModalOpen}
         className="bg-neutral-900"
+        proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
           type: "editable",
           animated: false,
