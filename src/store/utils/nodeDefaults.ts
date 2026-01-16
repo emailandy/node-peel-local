@@ -11,6 +11,9 @@ import {
   WorkflowNodeData,
   GroupColor,
   SelectedModel,
+  VideoNodeData,
+  AICriticNodeData,
+  VariantNodeData,
 } from "@/types";
 import { loadGenerateImageDefaults } from "./localStorage";
 
@@ -27,6 +30,9 @@ export const defaultNodeDimensions: Record<NodeType, { width: number; height: nu
   llmGenerate: { width: 320, height: 360 },
   splitGrid: { width: 300, height: 320 },
   output: { width: 320, height: 320 },
+  video: { width: 320, height: 340 },
+  aiCritic: { width: 300, height: 350 },
+  variant: { width: 300, height: 600 },
 };
 
 /**
@@ -137,5 +143,45 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
       return {
         image: null,
       } as OutputNodeData;
+    case "video":
+      return {
+        inputPrompt: null,
+        inputImages: [],
+        outputVideo: null,
+        model: "veo-3.1-generate-preview",
+        aspectRatio: "16:9",
+        resolution: "720p",
+        duration: "6",
+        status: "idle",
+        error: null,
+      } as VideoNodeData;
+    case "aiCritic":
+      return {
+        inputVideo: null,
+        inputPrompt: null,
+        criteria: "",
+        score: null,
+        reasoning: null,
+        passed: null,
+        autoDelete: false,
+        status: "idle",
+        error: null,
+      } as AICriticNodeData;
+    case "variant":
+      return {
+        inputImage: null,
+        inputPrompt: null,
+        variantMode: "demographics",
+        ethnicities: [],
+        genders: [],
+        styles: [],
+        variantCount: 1,
+        ratio: "1:1",
+        gridSize: "2x2",
+        quality: "draft",
+        status: "idle",
+        error: null,
+        results: [],
+      } as VariantNodeData;
   }
 };

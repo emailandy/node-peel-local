@@ -355,6 +355,25 @@ export function BaseNode({
               </button>
             </div>
           )}
+
+          {/* Remove Button */}
+          <div className="relative ml-2 shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // We need to import removeNode from store, but BaseNode currently only imports specific selectors or uses `useWorkflowStore((state) => ...)`
+                // Let's check how `useWorkflowStore` is used.
+                // It seems we can just grab removeNode from the store hook.
+                useWorkflowStore.getState().removeNode(id);
+              }}
+              className="nodrag nopan p-0.5 rounded transition-colors text-neutral-500 hover:text-red-400 border border-transparent hover:border-red-900/50 hover:bg-red-900/20"
+              title="Remove node"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div className="px-3 pb-4 h-[calc(100%-28px)] overflow-hidden flex flex-col">{children}</div>
       </div>

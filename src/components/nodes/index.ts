@@ -6,4 +6,7 @@ export { GenerateVideoNode } from "./GenerateVideoNode";
 export { LLMGenerateNode } from "./LLMGenerateNode";
 export { SplitGridNode } from "./SplitGridNode";
 export { OutputNode } from "./OutputNode";
+export { VideoNode } from "./VideoNode";
+export { AICriticNode } from "./AICriticNode";
+export { VariantNode } from "./VariantNode";
 export { GroupNode } from "./GroupNode";

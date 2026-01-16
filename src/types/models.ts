@@ -23,3 +23,10 @@ export type Resolution = "1K" | "2K" | "4K";
 
 // Image Generation Model Options
 export type ModelType = "nano-banana" | "nano-banana-pro";
+
+// Video Generation Model Options
+export type VideoModelType =
+  | "veo-3.1-generate-preview"
+  | "veo-3.1-fast-generate-preview"
+  | "veo-3.0-generate-001"
+  | "veo-3.0-fast-generate-001";

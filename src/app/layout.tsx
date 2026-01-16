@@ -3,8 +3,8 @@ import "./globals.css";
 import { Toast } from "@/components/Toast";
 
 export const metadata: Metadata = {
-  title: "Node Banana - AI Image Workflow",
-  description: "Node-based image annotation and generation workflow using Nano Banana Pro",
+  title: "Peel - AI Workflow Editor",
+  description: "Node-based generative AI workflow editor",
 };
 
 export default function RootLayout({

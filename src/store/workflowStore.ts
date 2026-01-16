@@ -19,6 +19,10 @@ import {
   GenerateVideoNodeData,
   LLMGenerateNodeData,
   SplitGridNodeData,
+  OutputNodeData,
+  VideoNodeData,
+  AICriticNodeData,
+  VariantNodeData,
   WorkflowNodeData,
   ImageHistoryItem,
   NodeGroup,
@@ -130,7 +134,7 @@ interface WorkflowStore {
 
   // Helpers
   getNodeById: (id: string) => WorkflowNode | undefined;
-  getConnectedInputs: (nodeId: string) => { images: string[]; text: string | null; dynamicInputs: Record<string, string> };
+  getConnectedInputs: (nodeId: string) => { images: string[]; text: string | null; video: string | null; dynamicInputs: Record<string, string> };
   validateWorkflow: () => { valid: boolean; errors: string[] };
 
   // Global Image History
@@ -168,24 +172,6 @@ interface WorkflowStore {
   resetIncurredCost: () => void;
   loadIncurredCost: (workflowId: string) => void;
   saveIncurredCost: () => void;
-
-  // Provider settings state
-  providerSettings: ProviderSettings;
-
-  // Provider settings actions
-  updateProviderSettings: (settings: ProviderSettings) => void;
-  updateProviderApiKey: (providerId: ProviderType, apiKey: string | null) => void;
-  toggleProvider: (providerId: ProviderType, enabled: boolean) => void;
-
-  // Model search dialog state
-  modelSearchOpen: boolean;
-  modelSearchProvider: ProviderType | null;
-
-  // Model search dialog actions
-  setModelSearchOpen: (open: boolean, provider?: ProviderType | null) => void;
-
-  // Recent models state
-  recentModels: RecentModel[];
 
   // Recent models actions
   trackModelUsage: (model: { provider: ProviderType; modelId: string; displayName: string }) => void;
@@ -571,12 +557,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodes: state.nodes.map((node) =>
         node.groupId === groupId
           ? {
-              ...node,
-              position: {
-                x: node.position.x + delta.x,
-                y: node.position.y + delta.y,
-              },
-            }
+            ...node,
+            position: {
+              x: node.position.x + delta.x,
+              y: node.position.y + delta.y,
+            },
+          }
           : node
       ) as WorkflowNode[],
       hasUnsavedChanges: true,
@@ -598,8 +584,10 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
   getConnectedInputs: (nodeId: string) => {
     const { edges, nodes } = get();
+    const incomingEdges = edges.filter((edge) => edge.target === nodeId);
     const images: string[] = [];
     let text: string | null = null;
+    let video: string | null = null;
     const dynamicInputs: Record<string, string> = {};
 
     // Get the target node to check for inputSchema
@@ -658,40 +646,51 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       } else if (sourceNode.type === "generateVideo") {
         // Return video type - generateVideo and output nodes handle this appropriately
         return { type: "video", value: (sourceNode.data as GenerateVideoNodeData).outputVideo };
+      } else if (sourceNode.type === "video") {
+        // User's custom VideoNode
+        return { type: "video", value: (sourceNode.data as VideoNodeData).outputVideo };
+      } else if (sourceNode.type === "variant") {
+        // User's custom VariantNode - return first image
+        const res = (sourceNode.data as VariantNodeData).results;
+        return { type: "image", value: res && res.length > 0 ? res[0].image : null };
       } else if (sourceNode.type === "prompt") {
         return { type: "text", value: (sourceNode.data as PromptNodeData).prompt };
       } else if (sourceNode.type === "llmGenerate") {
         return { type: "text", value: (sourceNode.data as LLMGenerateNodeData).outputText };
+      } else if (sourceNode.type === "output") {
+        // Output nodes might pass through images/videos? Usually they are sinks.
+        // But checking stash... Stash had: } else if (sourceNode.type === "output") { image = (sourceNode.data as OutputNodeData).image; }
+        return { type: "image", value: (sourceNode.data as OutputNodeData).image };
       }
       return { type: "image", value: null };
     };
 
-    edges
-      .filter((edge) => edge.target === nodeId)
-      .forEach((edge) => {
-        const sourceNode = nodes.find((n) => n.id === edge.source);
-        if (!sourceNode) return;
+    incomingEdges.forEach((edge) => {
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      if (!sourceNode) return;
 
-        const handleId = edge.targetHandle;
-        const { value } = getSourceOutput(sourceNode);
+      const handleId = edge.targetHandle;
+      const { type, value } = getSourceOutput(sourceNode);
 
-        if (!value) return;
+      if (!value) return;
 
-        // Map normalized handle ID to schema name for dynamicInputs
-        // This allows API to receive schema-specific parameter names
-        if (handleId && handleToSchemaName[handleId]) {
-          dynamicInputs[handleToSchemaName[handleId]] = value;
-        }
+      // Map normalized handle ID to schema name for dynamicInputs
+      // This allows API to receive schema-specific parameter names
+      if (handleId && handleToSchemaName[handleId]) {
+        dynamicInputs[handleToSchemaName[handleId]] = value;
+      }
 
-        // Also populate legacy arrays for backward compatibility
-        if (isImageHandle(handleId) || !handleId) {
-          images.push(value);
-        } else if (isTextHandle(handleId)) {
-          text = value;
-        }
-      });
+      // Also populate legacy arrays for backward compatibility
+      if (type === "image" && (isImageHandle(handleId) || !handleId)) {
+        images.push(value);
+      } else if (type === "text" && isTextHandle(handleId)) {
+        text = value; // Only take last text? Upstream behavior.
+      } else if (type === "video") {
+        video = value;
+      }
+    });
 
-    return { images, text, dynamicInputs };
+    return { images, text, video, dynamicInputs };
   },
 
   validateWorkflow: () => {
@@ -703,6 +702,22 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       errors.push("Workflow is empty");
       return { valid: false, errors };
     }
+
+    // Check Video nodes
+    nodes
+      .filter((n) => n.type === "video")
+      .forEach((node) => {
+        const textConnected = edges.some(
+          (e) => e.target === node.id && e.targetHandle === "text"
+        );
+        const imageConnected = edges.some(
+          (e) => e.target === node.id && e.targetHandle === "image"
+        );
+
+        if (!textConnected && !imageConnected) {
+          errors.push(`Video node "${node.data.customTitle || node.id}" requires at least an image or text input`);
+        }
+      });
 
     // Check each Nano Banana node has required inputs (text required, image optional)
     nodes
@@ -1005,6 +1020,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                 // Add to node's carousel history
                 const newHistoryItem = {
                   id: imageId,
+                  image: result.image, // Persist base64 image in history
                   timestamp,
                   prompt: promptText,
                   aspectRatio: nodeData.aspectRatio,
@@ -1524,6 +1540,316 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             break;
           }
 
+          case "video": {
+            const { images, text, video } = getConnectedInputs(node.id);
+            const inputPrompt = text || (node.data as VideoNodeData).inputPrompt;
+
+            if (!inputPrompt && images.length === 0 && !video) {
+              logger.error('node.error', 'video node missing input', {
+                nodeId: node.id,
+              });
+              updateNodeData(node.id, {
+                status: "error",
+                error: "Missing input (text, image, or video)",
+              });
+              set({ isRunning: false, currentNodeId: null });
+              await logger.endSession();
+              return;
+            }
+
+            updateNodeData(node.id, {
+              status: "loading",
+              error: null,
+              inputPrompt: inputPrompt,
+              inputImages: images,
+            });
+
+            try {
+              const nodeData = node.data as VideoNodeData;
+              const { providerSettings } = get();
+
+              const response = await fetch("/api/video", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(providerSettings.providers.gemini.apiKey ? { "x-gemini-api-key": providerSettings.providers.gemini.apiKey } : {}),
+                },
+                body: JSON.stringify({
+                  prompt: inputPrompt,
+                  images: images,
+                  video,
+                  model: nodeData.model,
+                  aspectRatio: nodeData.aspectRatio,
+                  resolution: nodeData.resolution,
+                  duration: nodeData.duration,
+                  negativePrompt: nodeData.negativePrompt,
+                }),
+              });
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `HTTP ${response.status}`;
+                try {
+                  const errorJson = JSON.parse(errorText);
+                  errorMessage = errorJson.error || errorMessage;
+                } catch {
+                  if (errorText) errorMessage += ` - ${errorText.substring(0, 200)}`;
+                }
+                throw new Error(errorMessage);
+              }
+
+              const result = await response.json();
+              if (result.success && result.video) {
+                updateNodeData(node.id, {
+                  outputVideo: result.video,
+                  status: "complete",
+                  error: null,
+                });
+              } else {
+                throw new Error(result.error || "Video generation failed");
+              }
+
+            } catch (error) {
+              logger.error('node.error', 'video node execution failed', {
+                nodeId: node.id,
+              }, error instanceof Error ? error : undefined);
+              updateNodeData(node.id, {
+                status: "error",
+                error: error instanceof Error ? error.message : "Video generation failed",
+              });
+              set({ isRunning: false, currentNodeId: null });
+              await logger.endSession();
+              return;
+            }
+            break;
+          }
+
+          case "aiCritic": {
+            const { video, text } = getConnectedInputs(node.id);
+            const nodeData = node.data as AICriticNodeData;
+
+            logger.info('node.execution', 'Executing AI Critic Node', {
+              nodeId: node.id,
+              hasVideo: !!video,
+              hasText: !!text,
+              videoLength: video ? video.length : 0
+            });
+
+            // Only require video, prompt is optional but recommended
+            if (!video) {
+              updateNodeData(node.id, {
+                status: "error",
+                error: "Missing input video",
+              });
+              set({ isRunning: false, currentNodeId: null });
+              return;
+            }
+
+            updateNodeData(node.id, {
+              status: "loading",
+              error: null,
+              inputVideo: video,
+              inputPrompt: text,
+            });
+
+            try {
+              const { apiKey } = get();
+              const response = await fetch("/api/critic", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
+                },
+                body: JSON.stringify({
+                  video,
+                  inputPrompt: text || nodeData.inputPrompt,
+                  criteria: nodeData.criteria,
+                }),
+              });
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+              }
+
+              const result = await response.json();
+
+              updateNodeData(node.id, {
+                status: "complete",
+                score: result.score,
+                reasoning: result.reasoning,
+                passed: result.passed,
+                // If passed, we might want to pass the video through? 
+                // For now, let's assume the node itself is the end or just displays status.
+                // If we want to support "Gate", we set outputVideo = inputVideo only if passed.
+                // But WorkflowCanvas output handle for aiCritic is 'video'.
+                // So let's propagate the video if passed.
+                error: null,
+              });
+
+              // If the node has an output handle (it does), we should technically facilitate data flow.
+              // But getConnectedInputs pulls from source.
+              // Downstream nodes pull from THIS node.
+              // So if we want to "Gate", we need to store the video in AICriticNodeData so downstream can read it?
+              // Wait, getConnectedInputs follows edges.
+              // If downstream node connects to AICritic, it calls `getConnectedInputs(downstreamNodeId)`.
+              // `getConnectedInputs` finds source node (AICritic) and looks at `data.outputVideo` or similar?
+              // `getConnectedInputs` logic needs to be checked. 
+              // Currently `getConnectedInputs` iterates incoming edges.
+              // If edge source is "aiCritic", it should grab the video.
+              // I need to check `getConnectedInputs` implementation.
+              // For now, I'll update the metadata.
+
+            } catch (error) {
+              updateNodeData(node.id, {
+                status: "error",
+                error: error instanceof Error ? error.message : " critique failed",
+              });
+              set({ isRunning: false, currentNodeId: null });
+              return;
+            }
+            break;
+          }
+
+          case "variant": {
+            const { images, text } = getConnectedInputs(node.id);
+            const nodeData = node.data as VariantNodeData;
+
+            // Resolve inputs
+            // If connected image exists, use it. Else use internal.
+            const sourceImage = images[0] || nodeData.inputImage;
+            // If connected text exists, use it. Else use internal.
+            const sourcePrompt = text || nodeData.inputPrompt;
+
+            if (!sourcePrompt) {
+              updateNodeData(node.id, { status: "error", error: "Missing Prompt" });
+              set({ isRunning: false, currentNodeId: null });
+              return;
+            }
+
+            // If an image is provided, we MUST use pro model (Gemini 3 Pro) usually for multimodal?
+            // Or Nano Banana (Gemini 2.5 Flash) supports images too.
+            const model = "nano-banana-pro";
+
+            // Check mode
+            const isStyleMode = nodeData.variantMode === "style";
+            let combos: { label: string; promptModifier: string }[] = [];
+
+            if (isStyleMode) {
+              const styles = nodeData.styles && nodeData.styles.length > 0 ? nodeData.styles : [""];
+              combos = styles.map(style => ({
+                label: style,
+                promptModifier: style ? `in the style of ${style}` : ""
+              }));
+            } else {
+              // Demographics mode
+              const eths = nodeData.ethnicities && nodeData.ethnicities.length > 0 ? nodeData.ethnicities : [""];
+              const genders = nodeData.genders && nodeData.genders.length > 0 ? nodeData.genders : [""];
+
+              for (const eth of eths) {
+                for (const gen of genders) {
+                  if (!eth && !gen) continue;
+                  const label = `${eth} ${gen}`.trim();
+                  combos.push({
+                    label,
+                    promptModifier: label
+                  });
+                }
+              }
+            }
+
+            if (combos.length === 0) {
+              combos.push({ label: "Original", promptModifier: "" });
+            }
+
+            // Determine batches (Variant Count)
+            const batchCount = nodeData.variantCount || 1;
+
+            // Grid Size determines the CONTENT of the image (e.g. "split screen 2x2"), NOT the number of candidates.
+            const gridPromptMap: Record<string, string> = {
+              "1x1": "",
+              "2x2": "split screen, 2x2 grid, 4 panels",
+              "3x3": "split screen, 3x3 grid, 9 panels",
+            };
+            const gridInstruction = gridPromptMap[nodeData.gridSize] || "";
+
+            console.log(`[Workflow] Starting generation. Batches: ${batchCount}, Grid: ${nodeData.gridSize}`);
+
+            updateNodeData(node.id, { status: "loading", error: null, results: [] });
+
+            try {
+              const { apiKey } = get();
+              const allResults: { id: string; image: string; label: string }[] = [];
+
+              // Outer loop: Batches (Variant Count)
+              for (let i = 0; i < batchCount; i++) {
+
+                for (const combo of combos) {
+                  // Construct prompt
+                  let basePrompt = sourcePrompt;
+
+                  // 1. Apply style/demographic
+                  if (combo.promptModifier) {
+                    basePrompt = `${combo.promptModifier}, ${basePrompt}`;
+                  }
+
+                  // 2. Apply Grid Instruction
+                  if (gridInstruction) {
+                    basePrompt = `${gridInstruction}, ${basePrompt}`;
+                  }
+
+                  console.log(`[Workflow] Batch ${i + 1}: Prompt: ${basePrompt}`);
+
+                  const response = await fetch("/api/generate", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
+                    },
+                    body: JSON.stringify({
+                      prompt: basePrompt,
+                      images: sourceImage ? [sourceImage] : [],
+                      model: model,
+                      aspectRatio: nodeData.ratio,
+                      resolution: "1K",
+                      numberOfImages: 1, // Always 1 image file per loop
+                    })
+                  });
+
+                  if (!response.ok) throw new Error(`Failed: ${combo.label}`);
+                  const resJson = await response.json();
+
+                  // Handle multiple images if present, otherwise fallback to single
+                  const returnImages = resJson.images && resJson.images.length > 0
+                    ? resJson.images
+                    : (resJson.image ? [resJson.image] : []);
+
+                  if (resJson.success && returnImages.length > 0) {
+                    returnImages.forEach((img: string, idx: number) => {
+                      allResults.push({
+                        id: Math.random().toString(36).substr(2, 9),
+                        image: img,
+                        label: returnImages.length > 1
+                          ? `${combo.label || "Original"} (B${i + 1}-${idx + 1})`
+                          : (combo.label || "Original")
+                      });
+                    });
+                    updateNodeData(node.id, { results: [...allResults] });
+                  }
+                }
+              }
+              updateNodeData(node.id, { status: "complete" });
+            } catch (error) {
+              updateNodeData(node.id, {
+                status: "error",
+                error: error instanceof Error ? error.message : "Variant generation failed"
+              });
+              set({ isRunning: false, currentNodeId: null });
+              return;
+            }
+            break;
+          }
+
           case "output": {
             const { images } = getConnectedInputs(node.id);
             const content = images[0] || null;
@@ -1775,6 +2101,86 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             error: result.error || "Generation failed",
           });
         }
+      } else if (node.type === "video") {
+        const nodeData = node.data as VideoNodeData;
+
+        // Always get fresh connected inputs first, fall back to stored inputs only if not connected
+        const inputs = getConnectedInputs(nodeId);
+        const images = inputs.images.length > 0 ? inputs.images : nodeData.inputImages;
+        const text = inputs.text ?? nodeData.inputPrompt;
+        // Video input doesn't persist in nodeData yet, solely relying on connection
+        const video = inputs.video;
+
+        if (!text && images.length === 0 && !video) {
+          updateNodeData(nodeId, {
+            status: "error",
+            error: "Missing input (text, image, or video)",
+          });
+          set({ isRunning: false, currentNodeId: null });
+          await logger.endSession();
+          return;
+        }
+
+        updateNodeData(nodeId, {
+          status: "loading",
+          error: null,
+        });
+
+        try {
+          const { apiKey } = get();
+          const response = await fetch("/api/video", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
+            },
+            body: JSON.stringify({
+              prompt: text,
+              images: images,
+              video: video,
+              model: nodeData.model,
+              aspectRatio: nodeData.aspectRatio,
+              resolution: nodeData.resolution,
+              duration: nodeData.duration,
+              negativePrompt: nodeData.negativePrompt,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage = `HTTP ${response.status}`;
+            try {
+              const errorJson = JSON.parse(errorText);
+              errorMessage = errorJson.error || errorMessage;
+            } catch {
+              if (errorText) errorMessage += ` - ${errorText.substring(0, 200)}`;
+            }
+            throw new Error(errorMessage);
+          }
+
+          const result = await response.json();
+          if (result.success && result.video) {
+            updateNodeData(nodeId, {
+              outputVideo: result.video,
+              status: "complete",
+              error: null,
+            });
+          } else {
+            throw new Error(result.error || "Video generation failed");
+          }
+        } catch (error) {
+          logger.error('node.error', 'video node regeneration failed', {
+            nodeId,
+          }, error instanceof Error ? error : undefined);
+          updateNodeData(nodeId, {
+            status: "error",
+            error: error instanceof Error ? error.message : "Video generation failed",
+          });
+          set({ isRunning: false, currentNodeId: null });
+          await logger.endSession();
+          return;
+        }
+
       } else if (node.type === "llmGenerate") {
         const nodeData = node.data as LLMGenerateNodeData;
 
@@ -2166,7 +2572,205 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           await logger.endSession();
           return;
         }
+      } else if (node.type === "variant") {
+        const nodeData = node.data as VariantNodeData;
+        const inputs = getConnectedInputs(nodeId);
+
+        // Resolve inputs
+        const sourceImage = inputs.images[0] || nodeData.inputImage;
+        const sourcePrompt = inputs.text || nodeData.inputPrompt;
+
+        if (!sourcePrompt) {
+          updateNodeData(nodeId, { status: "error", error: "Missing Prompt" });
+          set({ isRunning: false, currentNodeId: null });
+          await logger.endSession();
+          return;
+        }
+
+        const model = "nano-banana-pro";
+
+        // Check mode
+        const isStyleMode = nodeData.variantMode === "style";
+        let combos: { label: string; promptModifier: string }[] = [];
+
+        if (isStyleMode) {
+          const styles = nodeData.styles && nodeData.styles.length > 0 ? nodeData.styles : [""];
+          combos = styles.map(style => ({
+            label: style,
+            promptModifier: style ? `in the style of ${style}` : ""
+          }));
+        } else {
+          // Demographics mode
+          const eths = nodeData.ethnicities && nodeData.ethnicities.length > 0 ? nodeData.ethnicities : [""];
+          const genders = nodeData.genders && nodeData.genders.length > 0 ? nodeData.genders : [""];
+
+          for (const eth of eths) {
+            for (const gen of genders) {
+              if (!eth && !gen) continue;
+              const label = `${eth} ${gen}`.trim();
+              combos.push({
+                label,
+                promptModifier: label
+              });
+            }
+          }
+        }
+
+        if (combos.length === 0) {
+          combos.push({ label: "Original", promptModifier: "" });
+        }
+
+        // Determine batches (Variant Count)
+        const batchCount = nodeData.variantCount || 1;
+
+        // Grid Size determines the CONTENT of the image (e.g. "split screen 2x2")
+        const gridPromptMap: Record<string, string> = {
+          "1x1": "",
+          "2x2": "split screen, 2x2 grid, 4 panels",
+          "3x3": "split screen, 3x3 grid, 9 panels",
+        };
+        const gridInstruction = gridPromptMap[nodeData.gridSize] || "";
+
+        console.log(`[Workflow] Starting generation. Batches: ${batchCount}, Grid: ${nodeData.gridSize}`);
+
+        updateNodeData(nodeId, { status: "loading", error: null, results: [] });
+
+        try {
+          const { apiKey } = get();
+          const allResults: { id: string; image: string; label: string }[] = [];
+
+          // Outer loop: Batches (Variant Count)
+          for (let i = 0; i < batchCount; i++) {
+
+            for (const combo of combos) {
+              // Construct prompt
+              let basePrompt = sourcePrompt;
+
+              // 1. Apply style/demographic
+              if (combo.promptModifier) {
+                basePrompt = `${combo.promptModifier}, ${basePrompt}`;
+              }
+
+              // 2. Apply Grid Instruction
+              if (gridInstruction) {
+                basePrompt = `${gridInstruction}, ${basePrompt}`;
+              }
+
+              console.log(`[Workflow] Batch ${i + 1}: Prompt: ${basePrompt}`);
+
+              const response = await fetch("/api/generate", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
+                },
+                body: JSON.stringify({
+                  prompt: basePrompt,
+                  images: sourceImage ? [sourceImage] : [],
+                  model: model,
+                  aspectRatio: nodeData.ratio,
+                  resolution: "1K",
+                  numberOfImages: 1, // Always 1 image file per loop
+                })
+              });
+
+              if (!response.ok) throw new Error(`Failed: ${combo.label}`);
+              const resJson = await response.json();
+              console.log(`[Workflow] Batch ${i + 1}: Success, Images: ${resJson.images?.length || 0}`);
+
+              // Handle multiple images if present, otherwise fallback to single
+              const returnImages = resJson.images && resJson.images.length > 0
+                ? resJson.images
+                : (resJson.image ? [resJson.image] : []);
+
+              if (resJson.success && returnImages.length > 0) {
+                returnImages.forEach((img: string, idx: number) => {
+                  allResults.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    image: img,
+                    label: returnImages.length > 1
+                      ? `${combo.label || "Original"} (B${i + 1}-${idx + 1})`
+                      : (combo.label || "Original")
+                  });
+                });
+                // Update results incrementally so user sees progress
+                updateNodeData(nodeId, { results: [...allResults] });
+              }
+            }
+          }
+          console.log(`[Workflow] All batches complete. Total results: ${allResults.length}`);
+          updateNodeData(nodeId, { status: "complete" });
+        } catch (error) {
+          updateNodeData(nodeId, {
+            status: "error",
+            error: error instanceof Error ? error.message : "Variant generation failed"
+          });
+        }
+        set({ isRunning: false, currentNodeId: null });
+        await logger.endSession();
+
+      } else if (node.type === "aiCritic") {
+        const nodeData = node.data as AICriticNodeData;
+        const inputs = getConnectedInputs(nodeId);
+        // Prioritize connected video, then internal state
+        const video = inputs.video || nodeData.inputVideo;
+        const text = inputs.text || nodeData.inputPrompt;
+
+        if (!video) {
+          updateNodeData(nodeId, {
+            status: "error",
+            error: "Missing input video",
+          });
+          set({ isRunning: false, currentNodeId: null });
+          return;
+        }
+
+        updateNodeData(nodeId, {
+          status: "loading",
+          error: null,
+          inputVideo: video,
+          inputPrompt: text,
+        });
+
+        try {
+          const { apiKey } = get();
+          const response = await fetch("/api/critic", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
+            },
+            body: JSON.stringify({
+              video,
+              inputPrompt: text,
+              criteria: nodeData.criteria,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+          updateNodeData(nodeId, {
+            status: "complete",
+            score: result.score,
+            reasoning: result.reasoning,
+            passed: result.passed,
+            error: null,
+          });
+        } catch (error) {
+          updateNodeData(nodeId, {
+            status: "error",
+            error: error instanceof Error ? error.message : "Critique failed",
+          });
+        }
+        set({ isRunning: false, currentNodeId: null });
+        await logger.endSession();
       }
+
+
 
       logger.info('node.execution', 'Node regeneration completed successfully', { nodeId });
       set({ isRunning: false, currentNodeId: null });

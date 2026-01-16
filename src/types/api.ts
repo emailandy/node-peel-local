@@ -16,6 +16,7 @@ export interface GenerateRequest {
   resolution?: Resolution; // Only for Nano Banana Pro
   model?: ModelType;
   useGoogleSearch?: boolean; // Only for Nano Banana Pro
+  numberOfImages?: number; // From user customization
   mediaType?: "image" | "video"; // Indicates expected output type for provider routing
 }
 
@@ -36,6 +37,7 @@ export interface LLMGenerateRequest {
   model: LLMModelType;
   temperature?: number;
   maxTokens?: number;
+  enhancementType?: "image" | "video" | "branding" | "product" | "editing" | "logic" | "content";
 }
 
 export interface LLMGenerateResponse {

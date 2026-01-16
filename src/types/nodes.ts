@@ -16,7 +16,7 @@ import type {
 export type { AnnotationNodeData, BaseNodeData };
 
 // Import from domain files to avoid circular dependencies
-import type { AspectRatio, Resolution, ModelType } from "./models";
+import type { AspectRatio, Resolution, ModelType, VideoModelType } from "./models";
 import type { LLMProvider, LLMModelType, SelectedModel } from "./providers";
 
 /**
@@ -30,7 +30,10 @@ export type NodeType =
   | "generateVideo"
   | "llmGenerate"
   | "splitGrid"
-  | "output";
+  | "output"
+  | "video"
+  | "aiCritic"
+  | "variant";
 
 /**
  * Node execution status
@@ -139,6 +142,25 @@ export interface GenerateVideoNodeData extends BaseNodeData {
 }
 
 /**
+ * Video Node Data - Keeping specifically if different from GenerateVideo
+ */
+export interface VideoNodeData extends BaseNodeData {
+  inputPrompt: string | null;
+  inputImages: string[]; // Optional image conditioning
+  inputImageRefs?: string[];
+  outputVideo: string | null; // URL or base64
+  outputVideoRef?: string;
+  model: VideoModelType;
+  negativePrompt?: string;
+  aspectRatio: "16:9" | "9:16";
+  resolution: "720p" | "1080p" | "4k";
+  duration: "4" | "6" | "8";
+  personGeneration?: "allow_all" | "allow_adult" | "dont_allow";
+  status: NodeStatus;
+  error: string | null;
+}
+
+/**
  * LLM Generate node - AI text generation
  */
 export interface LLMGenerateNodeData extends BaseNodeData {
@@ -191,6 +213,40 @@ export interface SplitGridNodeData extends BaseNodeData {
 }
 
 /**
+ * AI Critic Node Data (Guardrail)
+ */
+export interface AICriticNodeData extends BaseNodeData {
+  inputVideo: string | null; // URL or base64
+  inputPrompt: string | null;
+  criteria: string;
+  score: number | null;
+  reasoning: string | null;
+  passed: boolean | null;
+  autoDelete: boolean;
+  status: NodeStatus;
+  error: string | null;
+}
+
+/**
+ * Demographic Variant Generator Node Data
+ */
+export interface VariantNodeData extends BaseNodeData {
+  inputImage: string | null; // ControlNet/IP-Adapter input
+  inputPrompt: string | null;
+  variantMode: "demographics" | "style"; // Mode selection
+  ethnicities: string[]; // Selected options (Demographics mode)
+  genders: string[]; // Selected options (Demographics mode)
+  styles: string[]; // Selected options (Style mode)
+  variantCount: number; // Number of images to generate (1-4)
+  ratio: AspectRatio;
+  gridSize: "1x1" | "2x2" | "3x3";
+  quality: "draft" | "high";
+  status: NodeStatus;
+  error: string | null;
+  results: Array<{ id: string; image: string; label: string }>; // label = "South Asian Male" or "Cyberpunk"
+}
+
+/**
  * Union of all node data types
  */
 export type WorkflowNodeData =
@@ -201,7 +257,10 @@ export type WorkflowNodeData =
   | GenerateVideoNodeData
   | LLMGenerateNodeData
   | SplitGridNodeData
-  | OutputNodeData;
+  | OutputNodeData
+  | VideoNodeData
+  | AICriticNodeData
+  | VariantNodeData;
 
 /**
  * Workflow node with typed data (extended with optional groupId)
