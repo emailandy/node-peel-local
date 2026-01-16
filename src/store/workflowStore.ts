@@ -1557,10 +1557,16 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
               return;
             }
 
+            let finalPrompt = inputPrompt;
+            const videoNodeData = node.data as VideoNodeData;
+            if (videoNodeData.cameraMovement && videoNodeData.cameraMovement !== "none") {
+              finalPrompt = `${inputPrompt || ""} \n\nCamera Movement: ${videoNodeData.cameraMovement}`;
+            }
+
             updateNodeData(node.id, {
               status: "loading",
               error: null,
-              inputPrompt: inputPrompt,
+              inputPrompt: finalPrompt,
               inputImages: images,
             });
 
@@ -1575,7 +1581,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                   ...(providerSettings.providers.gemini.apiKey ? { "x-gemini-api-key": providerSettings.providers.gemini.apiKey } : {}),
                 },
                 body: JSON.stringify({
-                  prompt: inputPrompt,
+                  prompt: finalPrompt,
                   images: images,
                   video,
                   model: nodeData.model,

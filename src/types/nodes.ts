@@ -155,6 +155,7 @@ export interface VideoNodeData extends BaseNodeData {
   aspectRatio: "16:9" | "9:16";
   resolution: "720p" | "1080p" | "4k";
   duration: "4" | "6" | "8";
+  cameraMovement?: string;
   personGeneration?: "allow_all" | "allow_adult" | "dont_allow";
   status: NodeStatus;
   error: string | null;

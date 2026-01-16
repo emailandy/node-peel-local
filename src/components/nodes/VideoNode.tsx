@@ -13,6 +13,25 @@ const MODELS: { value: VideoModelType; label: string }[] = [
   { value: "veo-3.0-fast-generate-001", label: "Veo 3.0 Fast (001)" },
 ];
 
+const CAMERA_MOVEMENTS = [
+  { value: "Pan Right", label: "Pan Right" },
+  { value: "Pan Left", label: "Pan Left" },
+  { value: "Micro Zoom", label: "Micro Zoom" },
+  { value: "Point of View (POV)", label: "Point of View (POV)" },
+  { value: "Dolly Zoom In", label: "Dolly Zoom In" },
+  { value: "Dolly Zoom Out", label: "Dolly Zoom Out" },
+  { value: "360° Rotation", label: "360° Rotation" },
+  { value: "Tilt Up", label: "Tilt Up" },
+  { value: "Tilt Down", label: "Tilt Down" },
+  { value: "Push In", label: "Push In" },
+  { value: "Pull Out", label: "Pull Out" },
+  { value: "Zoom Out", label: "Zoom Out" },
+  { value: "Zoom In", label: "Zoom In" },
+  { value: "High Angle", label: "High Angle" },
+  { value: "Low Angle", label: "Low Angle" },
+  { value: "Truck Shot", label: "Truck Shot" },
+];
+
 type VideoNodeType = Node<VideoNodeData, "video">;
 
 export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
@@ -203,9 +222,21 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
             onChange={(e) => updateNodeData(id, { duration: e.target.value as any })}
             className="text-[10px] py-1 px-1.5 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
           >
-            <option value="4">4s</option>
             <option value="6">6s</option>
             <option value="8">8s</option>
+          </select>
+
+          <select
+            value={nodeData.cameraMovement || "none"}
+            onChange={(e) => updateNodeData(id, { cameraMovement: e.target.value })}
+            className="w-full text-[10px] py-1 px-1.5 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
+          >
+            <option value="none">No Camera Movement</option>
+            {CAMERA_MOVEMENTS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
           </select>
 
           <textarea

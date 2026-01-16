@@ -152,6 +152,7 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         aspectRatio: "16:9",
         resolution: "720p",
         duration: "6",
+        cameraMovement: "none",
         status: "idle",
         error: null,
       } as VideoNodeData;
