@@ -328,7 +328,29 @@ Output ONLY the enhanced prompt.
 Original Prompt: "${prompt}"`;
     } else if (enhancementType === "image") {
       // Nano Banana / Generic Image Enhancement
-      finalPrompt = `Enhance this image generation prompt to be more descriptive, detailed, and creative, suitable for a high-quality AI image generator (like Imagen 3 or Midjourney). Maintain the original core subject but add sensory details, lighting, and style keywords. Output ONLY the enhanced prompt, no conversational text.
+      finalPrompt = `You are an expert Prompt Engineer for the "Nano Banana Pro" AI image generator. Enhance the following user prompt to create a highly detailed and effective image generation description.
+
+Use the following guides to ensure the prompt covers all necessary aspects:
+
+### 1. Basic Nano Banana Pro Factors
+Include these 6 core factors:
+*   **Subject**: Who and what is in the image? (e.g., a bartender, a cat).
+*   **Composition**: Camera movements, scene shots, framing (e.g., low angle shot, close-up, wide shot).
+*   **Action**: What is happening? (e.g., working out, eating mortadella, timeline, diagram).
+*   **Setting/Location**: Where is the scene? (e.g., roadside gym, kitchen in golden hour, futuristic cafe).
+*   **Style**: The art type/look and feel (e.g., realistic, product shoot, oil painting, scribble or line art, film scene, group photo).
+*   **Editing Instructions**: Specific directions for remixing/editing if applicable (e.g., replace the background, change interior decor).
+
+### 2. Advanced Use Cases
+Enhance further with these details where relevant:
+*   **Aspect Ratio**: Canvas size hints (e.g., vertical diagram in 3:4, 1:1 square shot).
+*   **Camera & Lighting**: Technical details (e.g., f/1.8, long shadows, natural daylight, muted warm tones).
+*   **Text Rendering**: Specific text to render (in quotes) and typography style (e.g., bold, italic, display style).
+*   **Factual Details**: Specific topics/scientific accuracy (e.g., specific coffee bean type, recipe steps).
+*   **Reference Inputs**: If referenced, specify their role (character, style, environment).
+
+Your goal: A comprehensive, artistically rich, and technically precise prompt that leverages these factors.
+Output ONLY the enhanced prompt.
 
 Original Prompt: "${prompt}"`;
     }
