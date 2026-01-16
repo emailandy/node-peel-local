@@ -1630,6 +1630,78 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             break;
           }
 
+          case "videoStitch": {
+            const incomingEdges = edges.filter((e) => e.target === node.id);
+            const inputVideos: string[] = [];
+
+            // Check handles video1, video2, video3, video4
+            [1, 2, 3, 4].forEach((index) => {
+              const handleId = `video${index}`;
+              const edge = incomingEdges.find((e) => e.targetHandle === handleId);
+              if (edge) {
+                const sourceNode = nodes.find((n) => n.id === edge.source);
+                if (sourceNode) {
+                  const data = sourceNode.data as any;
+                  // Support outputVideo (VideoNode/GenerateVideoNode) or video (OutputNode?)
+                  const vid = data.outputVideo || data.video;
+                  if (vid) inputVideos.push(vid);
+                }
+              }
+            });
+
+            if (inputVideos.length < 2) {
+              updateNodeData(node.id, {
+                status: "error",
+                error: "Connect at least 2 videos",
+              });
+              set({ isRunning: false, currentNodeId: null });
+              return;
+            }
+
+            updateNodeData(node.id, {
+              status: "loading",
+              error: null,
+              inputVideos,
+            });
+
+            try {
+              const response = await fetch("/api/video/stitch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ videos: inputVideos }),
+              });
+
+              if (!response.ok) {
+                // Try to parse error
+                const text = await response.text();
+                let msg = text;
+                try { msg = JSON.parse(text).error || text; } catch { }
+                throw new Error(msg);
+              }
+
+              const result = await response.json();
+              if (result.success && result.video) {
+                updateNodeData(node.id, {
+                  status: "complete",
+                  outputVideo: result.video,
+                  error: null
+                });
+              } else {
+                throw new Error(result.error || "Stitching failed");
+              }
+
+            } catch (error) {
+              logger.error('node.error', 'video stitch failed', { nodeId: node.id }, error instanceof Error ? error : undefined);
+              updateNodeData(node.id, {
+                status: "error",
+                error: error instanceof Error ? error.message : "Stitching failed",
+              });
+              set({ isRunning: false, currentNodeId: null });
+              return;
+            }
+            break;
+          }
+
           case "aiCritic": {
             const { video, text } = getConnectedInputs(node.id);
             const nodeData = node.data as AICriticNodeData;

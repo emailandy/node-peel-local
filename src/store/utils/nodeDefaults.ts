@@ -14,6 +14,7 @@ import {
   VideoNodeData,
   AICriticNodeData,
   VariantNodeData,
+  VideoStitchNodeData,
 } from "@/types";
 import { loadGenerateImageDefaults } from "./localStorage";
 
@@ -33,6 +34,7 @@ export const defaultNodeDimensions: Record<NodeType, { width: number; height: nu
   video: { width: 320, height: 340 },
   aiCritic: { width: 300, height: 350 },
   variant: { width: 300, height: 600 },
+  videoStitch: { width: 300, height: 400 },
 };
 
 /**
@@ -184,5 +186,12 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         error: null,
         results: [],
       } as VariantNodeData;
+    case "videoStitch":
+      return {
+        inputVideos: [],
+        outputVideo: null,
+        status: "idle",
+        error: null,
+      } as VideoStitchNodeData;
   }
 };

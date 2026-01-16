@@ -11,7 +11,9 @@ export type NodeType =
   | "video"
   | "output"
   | "aiCritic"
-  | "variant";
+  | "variant"
+  | "generateVideo"
+  | "videoStitch";
 
 // Aspect Ratios (supported by both Nano Banana and Nano Banana Pro)
 export type AspectRatio = "1:1" | "2:3" | "3:2" | "3:4" | "4:3" | "4:5" | "5:4" | "9:16" | "16:9" | "21:9";
@@ -143,6 +145,33 @@ export interface CarouselImageItem {
   model: ModelType;
 }
 
+// Provider Type
+export type ProviderType = "replicate" | "fal";
+
+// Selected Model for multi-provider support
+export interface SelectedModel {
+  provider: ProviderType | "gemini";
+  modelId: string;
+  displayName?: string;
+}
+
+// Carousel Video Item
+export interface CarouselVideoItem {
+  id: string;
+  timestamp: number;
+  prompt: string;
+  model: string;
+}
+
+// Model input definition
+export interface ModelInputDef {
+  name: string;
+  type: "image" | "text";
+  required: boolean;
+  label: string;
+  description?: string;
+}
+
 // Nano Banana Node Data (Image Generation)
 export interface NanoBananaNodeData extends BaseNodeData {
   inputImages: string[]; // Now supports multiple images
@@ -252,6 +281,30 @@ export interface VariantNodeData extends BaseNodeData {
 }
 
 
+// Generate Video node - AI video generation (Upstream)
+export interface GenerateVideoNodeData extends BaseNodeData {
+  inputImages: string[];
+  inputImageRefs?: string[];
+  inputPrompt: string | null;
+  outputVideo: string | null;
+  outputVideoRef?: string;
+  selectedModel?: SelectedModel;
+  parameters?: Record<string, unknown>;
+  inputSchema?: ModelInputDef[];
+  status: NodeStatus;
+  error: string | null;
+  videoHistory: CarouselVideoItem[];
+  selectedVideoHistoryIndex: number;
+}
+
+// Video Stitch Node Data
+export interface VideoStitchNodeData extends BaseNodeData {
+  inputVideos: string[]; // URLs of connected videos
+  outputVideo: string | null;
+  status: NodeStatus;
+  error: string | null;
+}
+
 // Union of all node data types
 export type WorkflowNodeData =
   | ImageInputNodeData
@@ -263,7 +316,9 @@ export type WorkflowNodeData =
   | VideoNodeData
   | OutputNodeData
   | AICriticNodeData
-  | VariantNodeData;
+  | VariantNodeData
+  | VideoStitchNodeData
+  | GenerateVideoNodeData;
 
 // Workflow Node with typed data (extended with optional groupId)
 export type WorkflowNode = Node<WorkflowNodeData, NodeType> & {

@@ -9,4 +9,5 @@ export { OutputNode } from "./OutputNode";
 export { VideoNode } from "./VideoNode";
 export { AICriticNode } from "./AICriticNode";
 export { VariantNode } from "./VariantNode";
+export { VideoStitchNode } from "./VideoStitchNode";
 export { GroupNode } from "./GroupNode";
