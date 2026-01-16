@@ -29,15 +29,16 @@ async function generateWithGoogle(
   maxTokens: number,
   images?: string[],
   requestId?: string,
-  apiKey?: string | null
+  userApiKey?: string | null
 ): Promise<string> {
-  const finalApiKey = apiKey || process.env.GEMINI_API_KEY;
-  if (!finalApiKey) {
+  // User-provided key takes precedence over env variable
+  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     logger.error('api.error', 'GEMINI_API_KEY not configured', { requestId });
-    throw new Error("GEMINI_API_KEY not configured");
+    throw new Error("GEMINI_API_KEY not configured. Add it to .env.local or configure in Settings.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: finalApiKey });
+  const ai = new GoogleGenAI({ apiKey });
   const modelId = GOOGLE_MODEL_MAP[model];
 
   logger.info('api.llm', 'Calling Google AI API', {
@@ -111,12 +112,14 @@ async function generateWithOpenAI(
   temperature: number,
   maxTokens: number,
   images?: string[],
-  requestId?: string
+  requestId?: string,
+  userApiKey?: string | null
 ): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  // User-provided key takes precedence over env variable
+  const apiKey = userApiKey || process.env.OPENAI_API_KEY;
   if (!apiKey) {
     logger.error('api.error', 'OPENAI_API_KEY not configured', { requestId });
-    throw new Error("OPENAI_API_KEY not configured");
+    throw new Error("OPENAI_API_KEY not configured. Add it to .env.local or configure in Settings.");
   }
 
   const modelId = OPENAI_MODEL_MAP[model];
@@ -191,6 +194,10 @@ export async function POST(request: NextRequest) {
   const requestId = generateRequestId();
 
   try {
+    // Get user-provided API keys from headers (override env variables)
+    const geminiApiKey = request.headers.get("X-Gemini-API-Key");
+    const openaiApiKey = request.headers.get("X-OpenAI-API-Key");
+
     const body: LLMGenerateRequest = await request.json();
     const {
       prompt,
@@ -220,14 +227,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = request.headers.get("x-gemini-api-key");
-
     let text: string;
 
     if (provider === "google") {
-      text = await generateWithGoogle(prompt, model, temperature, maxTokens, images, requestId, apiKey);
+      text = await generateWithGoogle(prompt, model, temperature, maxTokens, images, requestId, geminiApiKey);
     } else if (provider === "openai") {
-      text = await generateWithOpenAI(prompt, model, temperature, maxTokens, images, requestId);
+      text = await generateWithOpenAI(prompt, model, temperature, maxTokens, images, requestId, openaiApiKey);
     } else {
       logger.warn('api.llm', 'Unknown provider requested', { requestId, provider });
       return NextResponse.json<LLMGenerateResponse>(
