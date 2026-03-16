@@ -1,0 +1,523 @@
+{
+  "version": 1,
+  "id": "wf_1769014446841_2t32ru0wr",
+  "name": "CameraControl",
+  "nodes": [
+    {
+      "id": "prompt-2",
+      "type": "prompt",
+      "position": {
+        "x": 639.9294217219018,
+        "y": 803.985739856895
+      },
+      "data": {
+        "prompt": " The camera smoothly and slowly orbits the model. The model is completely still. The models movements are extremely deliberate and precise."
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-4",
+      "type": "imageInput",
+      "position": {
+        "x": 646.3351633560169,
+        "y": 483.9666633080675
+      },
+      "data": {
+        "image": "/user-avatars/avatar-1769011517802-97a57884-aa7a-40f8-94a0-257aaee67c0f.png",
+        "filename": "Andy the Traveler.png",
+        "dimensions": null
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 316,
+        "height": 301
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 316,
+      "height": 301,
+      "resizing": false
+    },
+    {
+      "id": "video-5",
+      "type": "video",
+      "position": {
+        "x": 1002.8994979808044,
+        "y": 469.5122861445891
+      },
+      "data": {
+        "inputPrompt": null,
+        "inputImages": [],
+        "outputVideo": "/outputs/generated-video-1769014271660-b977d3f1-af18-41a2-910c-cad4c1fc47bc.mp4",
+        "model": "veo-3.1-generate-preview",
+        "aspectRatio": "9:16",
+        "resolution": "720p",
+        "duration": "8",
+        "cameraMovement": "none",
+        "status": "complete",
+        "error": null
+      },
+      "style": {
+        "width": 320,
+        "height": 340
+      },
+      "measured": {
+        "width": 637,
+        "height": 565
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 637,
+      "height": 565,
+      "resizing": false
+    },
+    {
+      "id": "video-8",
+      "type": "video",
+      "position": {
+        "x": 996.8087388091542,
+        "y": 1049.3987256673888
+      },
+      "data": {
+        "inputPrompt": null,
+        "inputImages": [],
+        "outputVideo": "/outputs/generated-video-1769014644297-c0a64174-4d62-428d-a0b9-7951469b1ded.mp4",
+        "model": "veo-3.1-generate-preview",
+        "aspectRatio": "9:16",
+        "resolution": "720p",
+        "duration": "8",
+        "cameraMovement": "none",
+        "status": "complete",
+        "error": null
+      },
+      "style": {
+        "width": 320,
+        "height": 340
+      },
+      "measured": {
+        "width": 630,
+        "height": 470
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 630,
+      "height": 470,
+      "resizing": false
+    },
+    {
+      "id": "prompt-10",
+      "type": "prompt",
+      "position": {
+        "x": 630.5715633039399,
+        "y": 1117.182923260731
+      },
+      "data": {
+        "prompt": "The camera smoothly and slowly lifts on a boom. The model is completely still. The models movements are extremely deliberate and precise."
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "video-11",
+      "type": "video",
+      "position": {
+        "x": 995.0983380411046,
+        "y": 1536.4293056511967
+      },
+      "data": {
+        "inputPrompt": null,
+        "inputImages": [],
+        "outputVideo": "/outputs/generated-video-1769110964646-592c4b87-e24c-4be8-aa10-2d14c18081b9.mp4",
+        "model": "veo-3.1-generate-preview",
+        "aspectRatio": "9:16",
+        "resolution": "720p",
+        "duration": "8",
+        "cameraMovement": "none",
+        "status": "complete",
+        "error": null
+      },
+      "style": {
+        "width": 320,
+        "height": 340
+      },
+      "measured": {
+        "width": 645,
+        "height": 653
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 645,
+      "height": 653,
+      "resizing": false
+    },
+    {
+      "id": "prompt-12",
+      "type": "prompt",
+      "position": {
+        "x": 607.2263048883713,
+        "y": 1426.7713471351226
+      },
+      "data": {
+        "prompt": "The camera smoothly and slowly orbits to show the subject in profile. The model moves in slow motion. The model is completely still. The models movements are extremely deliberate and precise."
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "prompt-13",
+      "type": "prompt",
+      "position": {
+        "x": 2276.0499134917727,
+        "y": 994.0597250115189
+      },
+      "data": {
+        "prompt": " The model moves in slow motion. The models movements are extremely deliberate and precise."
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 334,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 334,
+      "height": 220,
+      "resizing": false
+    },
+    {
+      "id": "video-16",
+      "type": "video",
+      "position": {
+        "x": 1693.7415041458453,
+        "y": 477.35040722952056
+      },
+      "data": {
+        "inputPrompt": null,
+        "inputImages": [],
+        "outputVideo": "/outputs/generated-video-1769111200840-c337b1d4-4fa1-4b2e-b273-eb13fe49d22a.mp4",
+        "model": "veo-3.1-generate-preview",
+        "aspectRatio": "9:16",
+        "resolution": "720p",
+        "duration": "8",
+        "cameraMovement": "none",
+        "status": "complete",
+        "error": null
+      },
+      "style": {
+        "width": 320,
+        "height": 340
+      },
+      "measured": {
+        "width": 524,
+        "height": 555
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 524,
+      "height": 555,
+      "resizing": false
+    },
+    {
+      "id": "prompt-17",
+      "type": "prompt",
+      "position": {
+        "x": 1695.7894547910541,
+        "y": 1544.9235747321732
+      },
+      "data": {
+        "prompt": "The camera smoothly and slowly lowers on a boom. The model is completely still. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "video-18",
+      "type": "video",
+      "position": {
+        "x": 1697.8055583964367,
+        "y": 1047.9926662905752
+      },
+      "data": {
+        "inputPrompt": null,
+        "inputImages": [],
+        "outputVideo": "/outputs/generated-video-1769110878988-4baee480-49ec-4cb2-9393-87fb0bd0d0e9.mp4",
+        "model": "veo-3.1-generate-preview",
+        "aspectRatio": "9:16",
+        "resolution": "720p",
+        "duration": "8",
+        "cameraMovement": "none",
+        "status": "complete",
+        "error": null
+      },
+      "style": {
+        "width": 320,
+        "height": 340
+      },
+      "measured": {
+        "width": 517,
+        "height": 487
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 517,
+      "height": 487,
+      "resizing": false
+    },
+    {
+      "id": "aiCritic-19",
+      "type": "aiCritic",
+      "position": {
+        "x": 2285.1515759691983,
+        "y": 483.92164667078345
+      },
+      "data": {
+        "inputVideo": "/outputs/generated-video-1769111200840-c337b1d4-4fa1-4b2e-b273-eb13fe49d22a.mp4",
+        "inputPrompt": null,
+        "criteria": "Ensure the image looks indistinguishable from a real photograph, with realistic lighting, textures, and details.\nCheck for correct anatomical proportions, especially hands, fingers, and facial features.",
+        "score": 9,
+        "reasoning": "The video demonstrates exceptional photorealism with accurate lighting, skin texture, and depth of field. The subject's anatomical features are well-preserved during the head turn, and the background parallax is consistent with the camera movement. There are no significant artifacts or morphing, making it nearly indistinguishable from high-quality stock footage.",
+        "passed": true,
+        "autoDelete": false,
+        "status": "complete",
+        "error": null
+      },
+      "style": {
+        "width": 300,
+        "height": 350
+      },
+      "measured": {
+        "width": 334,
+        "height": 488
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 334,
+      "height": 488,
+      "resizing": false
+    },
+    {
+      "id": "videoStitch-20",
+      "type": "videoStitch",
+      "position": {
+        "x": 2271.7975183692356,
+        "y": 1243.1051051659067
+      },
+      "data": {
+        "inputVideos": [
+          "/outputs/generated-video-1769111200840-c337b1d4-4fa1-4b2e-b273-eb13fe49d22a.mp4",
+          "/outputs/generated-video-1769014271660-b977d3f1-af18-41a2-910c-cad4c1fc47bc.mp4",
+          "/outputs/generated-video-1769110964646-592c4b87-e24c-4be8-aa10-2d14c18081b9.mp4",
+          "/outputs/generated-video-1769014644297-c0a64174-4d62-428d-a0b9-7951469b1ded.mp4"
+        ],
+        "outputVideo": "/outputs/stitched-1769111273347-994fe9c0-b69b-4f7f-bcfe-bcdfdd17bd44.mp4",
+        "status": "complete",
+        "error": null
+      },
+      "style": {
+        "width": 300,
+        "height": 400
+      },
+      "measured": {
+        "width": 1168,
+        "height": 727
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 1168,
+      "height": 727,
+      "resizing": false
+    }
+  ],
+  "edges": [
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "imageInput-4",
+      "sourceHandle": "image",
+      "target": "video-5",
+      "targetHandle": "image",
+      "id": "edge-imageInput-4-video-5-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-2",
+      "sourceHandle": "text",
+      "target": "video-5",
+      "targetHandle": "text",
+      "id": "edge-prompt-2-video-5-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "imageInput-4",
+      "sourceHandle": "image",
+      "target": "video-8",
+      "targetHandle": "image",
+      "id": "edge-imageInput-4-video-8-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-10",
+      "sourceHandle": "text",
+      "target": "video-8",
+      "targetHandle": "text",
+      "id": "edge-prompt-10-video-8-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "imageInput-4",
+      "sourceHandle": "image",
+      "target": "video-11",
+      "targetHandle": "image",
+      "id": "edge-imageInput-4-video-11-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-12",
+      "sourceHandle": "text",
+      "target": "video-11",
+      "targetHandle": "text",
+      "id": "edge-prompt-12-video-11-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-13",
+      "sourceHandle": "text",
+      "target": "video-16",
+      "targetHandle": "text",
+      "id": "edge-prompt-13-video-16-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "imageInput-4",
+      "sourceHandle": "image",
+      "target": "video-16",
+      "targetHandle": "image",
+      "id": "edge-imageInput-4-video-16-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-17",
+      "sourceHandle": "text",
+      "target": "video-18",
+      "targetHandle": "text",
+      "id": "edge-prompt-17-video-18-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "imageInput-4",
+      "sourceHandle": "image",
+      "target": "video-18",
+      "targetHandle": "image",
+      "id": "edge-imageInput-4-video-18-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "video-16",
+      "sourceHandle": "video",
+      "target": "aiCritic-19",
+      "targetHandle": "video",
+      "id": "edge-video-16-aiCritic-19-video-video",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "video-16",
+      "sourceHandle": "video",
+      "target": "videoStitch-20",
+      "targetHandle": "video1",
+      "id": "edge-video-16-videoStitch-20-video-video1",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "video-5",
+      "sourceHandle": "video",
+      "target": "videoStitch-20",
+      "targetHandle": "video2",
+      "id": "edge-video-5-videoStitch-20-video-video2",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "video-11",
+      "sourceHandle": "video",
+      "target": "videoStitch-20",
+      "targetHandle": "video3",
+      "id": "edge-video-11-videoStitch-20-video-video3",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "video-8",
+      "sourceHandle": "video",
+      "target": "videoStitch-20",
+      "targetHandle": "video4",
+      "id": "edge-video-8-videoStitch-20-video-video4",
+      "selected": false
+    }
+  ],
+  "edgeStyle": "curved"
+}

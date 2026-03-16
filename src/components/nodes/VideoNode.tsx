@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Handle, Position, NodeProps, Node } from "@xyflow/react";
+import { Handle, Position, NodeProps, Node, useHandleConnections } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { VideoNodeData, VideoModelType } from "@/types";
@@ -39,6 +39,7 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const isRunning = useWorkflowStore((state) => state.isRunning);
   const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+  const handleConnections = useHandleConnections({ type: 'target', id: 'image' });
 
   const handleModelChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -68,16 +69,27 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
       selected={selected}
       isExecuting={isRunning}
       hasError={nodeData.status === "error"}
+      className="w-80 min-h-[650px]"
+      minHeight={650}
     >
-      {/* Image input - optional conditioning */}
+      {/* Image input - for I2V or Conditioning */}
       <Handle
         type="target"
         position={Position.Left}
         id="image"
-        style={{ top: "35%" }}
+        style={{ top: "20%" }}
         data-handletype="image"
-        isConnectable={true}
       />
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+        style={{
+          right: `calc(100% + 8px)`,
+          top: "calc(20% - 18px)",
+          color: "var(--handle-color-image)",
+        }}
+      >
+        Image
+      </div>
       {/* Video input - for video extension */}
       <Handle
         type="target"
@@ -85,33 +97,90 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
         id="video"
         style={{ top: "50%" }}
         data-handletype="video"
-        isConnectable={true}
       />
-      {/* Text input - single connection */}
+      {/* Video label */}
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+        style={{
+          right: `calc(100% + 8px)`,
+          top: "calc(50% - 18px)",
+          color: "var(--handle-color-video)",
+        }}
+      >
+        Video
+      </div>
+
+      {/* Text input */}
       <Handle
         type="target"
         position={Position.Left}
         id="text"
         style={{ top: "65%" }}
-        data-handletype="text"
       />
-      {/* Video output - technically not connectable to image inputs, but maybe for future video nodes */}
+      {/* Text label */}
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+        style={{
+          right: `calc(100% + 8px)`,
+          top: "calc(65% - 18px)",
+          color: "var(--handle-color-text)",
+        }}
+      >
+        Prompt
+      </div>
+
+      {/* Video output */}
       <Handle
         type="source"
         position={Position.Right}
         id="video"
-        data-handletype="image" // Reusing 'image' type for now as 'video' handle type isn't standard yet in our edges
+        data-handletype="image"
       />
+      {/* Output label */}
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none"
+        style={{
+          left: `calc(100% + 8px)`,
+          top: "calc(50% - 18px)",
+          color: "var(--handle-color-image)",
+        }}
+      >
+        Video
+      </div>
 
       <div className="flex-1 flex flex-col min-h-0 gap-2">
         {/* Preview area */}
         {nodeData.outputVideo ? (
-          <div className="relative w-full flex-1 min-h-0 bg-black rounded overflow-hidden">
+          <div className="relative w-full flex-1 min-h-0 bg-black rounded overflow-hidden group">
             <video
+              key={nodeData.outputVideo}
               src={nodeData.outputVideo}
               controls
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
               className="w-full h-full object-contain"
               loop
+              onError={(e) => {
+                const target = e.target as HTMLVideoElement;
+                const error = target.error;
+                console.error("Video error details:", {
+                  code: error?.code,
+                  message: error?.message,
+                  src: target.src
+                });
+
+                let errorMsg = "Unknown error";
+                if (error?.code === 1) errorMsg = "Aborted";
+                if (error?.code === 2) errorMsg = "Network Error (possibly 404 or CORS)";
+                if (error?.code === 3) errorMsg = "Decode Error (corrupt or unsupported codec)";
+                if (error?.code === 4) errorMsg = "Source Not Supported";
+
+                useWorkflowStore.getState().updateNodeData(id, {
+                  error: `Video playback error: ${errorMsg} (Code: ${error?.code})`
+                });
+              }}
             />
             {/* Loading overlay for generation */}
             {nodeData.status === "loading" && (
@@ -137,10 +206,22 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
                 </svg>
               </div>
             )}
-            <div className="absolute top-1 right-1 z-20">
+            <div className="absolute top-1 right-1 z-20 flex gap-1">
+              <a
+                href={nodeData.outputVideo}
+                download
+                className="w-5 h-5 bg-neutral-900/80 hover:bg-neutral-700/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                title="Download video"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </a>
               <button
                 onClick={handleClearVideo}
-                className="w-5 h-5 bg-neutral-900/80 hover:bg-red-600/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+                className="w-5 h-5 bg-neutral-900/80 hover:bg-red-600/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
                 title="Clear video"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -148,6 +229,19 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
                 </svg>
               </button>
             </div>
+            {nodeData.error && nodeData.error.startsWith("Video playback error") && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/80 text-red-400 text-xs text-center">
+                <span>{nodeData.error}</span>
+                <a
+                  href={nodeData.outputVideo!}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 underline text-neutral-400 hover:text-white"
+                >
+                  Try direct link
+                </a>
+              </div>
+            )}
           </div>
         ) : (
           <div className="w-full flex-1 min-h-[112px] border border-dashed border-neutral-600 rounded flex flex-col items-center justify-center">
@@ -197,14 +291,106 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
             ))}
           </select>
 
+          {/* Condition Images (First/Last Frame) */}
+          {/* If connected, show status. Always optional expand for manual override checking (though ignored by backend if priority set) */}
+          <div className="flex flex-col gap-2 border border-neutral-800 rounded p-2 bg-neutral-900/30">
+            {handleConnections.length > 0 ? (
+              <div className="text-[10px] text-green-400 flex items-center gap-1.5 pb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                Using {handleConnections.length} connected image{handleConnections.length > 1 ? 's' : ''}
+              </div>
+            ) : (
+              <div className="text-[10px] text-neutral-500 pb-1">
+                No images connected
+              </div>
+            )}
+
+            <details className="group/details">
+              <summary className="text-[10px] text-neutral-400 cursor-pointer hover:text-neutral-300 select-none flex items-center gap-1 list-none">
+                <svg className="w-3 h-3 transition-transform group-open/details:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                <span>Manual First/Last Frames</span>
+              </summary>
+              <div className="flex gap-2 pt-2 pl-2 border-l border-neutral-800 ml-1.5 mt-1">
+                <div className="flex-1 flex flex-col gap-1">
+                  <label className="text-[9px] text-neutral-500">First Frame</label>
+                  {nodeData.firstFrameImage ? (
+                    <div className="relative group w-full aspect-video bg-neutral-900 rounded border border-neutral-700 overflow-hidden">
+                      <img src={nodeData.firstFrameImage} className="w-full h-full object-cover" alt="First frame" />
+                      <button
+                        onClick={() => updateNodeData(id, { firstFrameImage: null })}
+                        className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-red-900/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center w-full aspect-video border border-dashed border-neutral-700 rounded hover:bg-neutral-800/50 cursor-pointer transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (ev.target?.result) updateNodeData(id, { firstFrameImage: ev.target.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <span className="text-[9px] text-neutral-500 text-center px-1">Upload Start</span>
+                    </label>
+                  )}
+                </div>
+                <div className="flex-1 flex flex-col gap-1">
+                  <label className="text-[9px] text-neutral-500">Last Frame</label>
+                  {nodeData.lastFrameImage ? (
+                    <div className="relative group w-full aspect-video bg-neutral-900 rounded border border-neutral-700 overflow-hidden">
+                      <img src={nodeData.lastFrameImage} className="w-full h-full object-cover" alt="Last frame" />
+                      <button
+                        onClick={() => updateNodeData(id, { lastFrameImage: null })}
+                        className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-red-900/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center w-full aspect-video border border-dashed border-neutral-700 rounded hover:bg-neutral-800/50 cursor-pointer transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (ev.target?.result) updateNodeData(id, { lastFrameImage: ev.target.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <span className="text-[9px] text-neutral-500 text-center px-1">Upload End</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+            </details>
+          </div>
+
           <div className="grid grid-cols-2 gap-2">
             <select
               value={nodeData.aspectRatio || "16:9"}
               onChange={(e) => updateNodeData(id, { aspectRatio: e.target.value as any })}
               className="text-[10px] py-1 px-1.5 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
             >
-              <option value="16:9">16:9</option>
-              <option value="9:16">9:16</option>
+              <option value="16:9">16:9 (Landscape)</option>
+              <option value="9:16">9:16 (Portrait)</option>
             </select>
             <select
               value={nodeData.resolution || "720p"}
@@ -222,6 +408,7 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
             onChange={(e) => updateNodeData(id, { duration: e.target.value as any })}
             className="text-[10px] py-1 px-1.5 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
           >
+            <option value="4">4s</option>
             <option value="6">6s</option>
             <option value="8">8s</option>
           </select>
@@ -238,6 +425,8 @@ export function VideoNode({ id, data, selected }: NodeProps<VideoNodeType>) {
               </option>
             ))}
           </select>
+
+          {/* Reference type selector - REMOVED per user request */}
 
           <textarea
             value={nodeData.negativePrompt || ""}

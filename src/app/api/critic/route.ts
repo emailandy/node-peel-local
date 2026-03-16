@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import fs from "fs";
+import path from "path";
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 1 minute should be enough for critique
@@ -11,46 +13,68 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "API key is required" }, { status: 401 });
     }
 
-    const { video, inputPrompt, criteria } = await req.json();
+    const { video, image, inputPrompt, criteria } = await req.json();
 
-    if (!video) {
-      return NextResponse.json({ error: "Video input is required" }, { status: 400 });
+    if (!video && !image) {
+      return NextResponse.json({ error: "Video or Image input is required" }, { status: 400 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // Process video input
-    let videoPart;
-    if (typeof video === 'string') {
-      if (video.includes("base64,")) {
-        const [header, base64Data] = video.split("base64,");
-        const mimeType = header.split(";")[0].split(":")[1];
-        videoPart = {
-          inlineData: {
-            data: base64Data,
-            mimeType: mimeType
+    // Process media input
+    let mediaPart;
+    const mediaData = video || image;
+    const isVideo = !!video;
+
+    if (typeof mediaData === 'string') {
+      let finalData = mediaData;
+      let mimeType = isVideo ? "video/mp4" : "image/jpeg";
+
+      if (mediaData.startsWith("/")) {
+        // Handle local file path (e.g., /outputs/...)
+        try {
+          const filePath = path.join(process.cwd(), "public", mediaData);
+          if (fs.existsSync(filePath)) {
+            const fileBuffer = fs.readFileSync(filePath);
+            finalData = fileBuffer.toString('base64');
+            const ext = path.extname(mediaData).toLowerCase();
+            if (ext === '.mp4') mimeType = "video/mp4";
+            else if (ext === '.png') mimeType = "image/png";
+            else if (ext === '.jpg' || ext === '.jpeg') mimeType = "image/jpeg";
+            else if (ext === '.webp') mimeType = "image/webp";
+
+            console.log(`AI Critic: Loaded local file ${mediaData} (${mimeType})`);
+          } else {
+            console.warn(`AI Critic: File not found: ${filePath}`);
           }
-        };
-      } else {
-        // Fallback if raw base64
-        videoPart = {
-          inlineData: {
-            data: video,
-            mimeType: "video/mp4"
-          }
-        };
+        } catch (err) {
+          console.error("AI Critic: Error reading local file:", err);
+        }
+      } else if (mediaData.includes("base64,")) {
+        const [header, base64Data] = mediaData.split("base64,");
+        // Try to verify mime type from header if possible
+        const mimeMatch = header.match(/data:([^;]+)/);
+        if (mimeMatch) mimeType = mimeMatch[1];
+        finalData = base64Data;
       }
+
+      mediaPart = {
+        inlineData: {
+          data: finalData,
+          mimeType: mimeType
+        }
+      };
     } else {
-      return NextResponse.json({ error: "Invalid video format" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid media format" }, { status: 400 });
     }
 
-    const systemPrompt = `You are an expert AI Video Critic and Quality Assurance Guardrail.
-Your task is to evaluate a video based on a specific input prompt and a set of quality criteria.
+    const systemPrompt = `You are an expert AI Visual Critic and Quality Assurance Guardrail.
+Your task is to evaluate visual content (image or video) based on a specific input prompt and a set of quality criteria.
 
 Input Prompt: "${inputPrompt || 'No prompt provided'}"
 Criteria: "${criteria || 'No distortion, matches theme, realistic physics'}"
 
-Analyze the video carefully for:
+Analyze the content carefully for:
 1. Adherence to the Input Prompt.
 2. Visual Artifacts (distortion, morphing objects, extra limbs, bad physics).
 3. Overall aesthetic quality.
@@ -81,7 +105,7 @@ Rate strictly.`;
 
     const result = await model.generateContent([
       systemPrompt,
-      videoPart
+      mediaPart
     ]);
 
     const responseText = result.response.text();

@@ -13,17 +13,11 @@ export function VideoStitchNode({ id, data, selected }: NodeProps<VideoStitchNod
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const isRunning = useWorkflowStore((state) => state.isRunning);
   
-  // Custom run handler for this node
-  const handleRun = useCallback(async () => {
-    // Basic validation
-    if (isRunning) return;
-    
-    // We rely on the workflow store's executeNode logic usually, 
-    // but if we want manual triggering without full graph run:
-    // For now, we'll let the standard play button handle it if integrated.
-    // But since this is a specific tool, we might want a manual "Stitch" button if graph execution isn't fully robust yet.
-    // We will stick to standard execution flow (Play button on node).
-  }, [isRunning]);
+  const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+
+  const handleRun = useCallback(() => {
+    regenerateNode(id);
+  }, [id, regenerateNode]);
 
   const handleClear = useCallback(() => {
     updateNodeData(id, { outputVideo: null, status: "idle", error: null });
@@ -37,6 +31,7 @@ export function VideoStitchNode({ id, data, selected }: NodeProps<VideoStitchNod
       comment={nodeData.comment}
       onCustomTitleChange={(title) => updateNodeData(id, { customTitle: title || undefined })}
       onCommentChange={(comment) => updateNodeData(id, { comment: comment || undefined })}
+      onRun={handleRun}
       selected={selected}
       isExecuting={isRunning}
       hasError={nodeData.status === "error"}
@@ -59,6 +54,22 @@ export function VideoStitchNode({ id, data, selected }: NodeProps<VideoStitchNod
         ))}
       </div>
 
+      {/* Audio Input */}
+      <div className="absolute left-0 bottom-4">
+        <div className="relative group">
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="audio"
+            data-handletype="audio"
+            className="!w-3 !h-3 !-ml-1.5 hover:!w-4 hover:!h-4 transition-all !bg-purple-500"
+          />
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Audio Input
+          </span>
+        </div>
+      </div>
+
       {/* Output */}
       <Handle
         type="source"
@@ -72,6 +83,12 @@ export function VideoStitchNode({ id, data, selected }: NodeProps<VideoStitchNod
         {/* Helper Text */}
         <div className="text-[10px] text-neutral-400 mb-2">
           Connect up to 4 videos to stitch them together sequentially.
+        </div>
+        {/* Debug Info */}
+        <div className="text-[10px] font-mono mb-2">
+          <span className={nodeData.audio ? "text-green-500" : "text-neutral-600"}>
+            Audio: {nodeData.audio ? `Present (${nodeData.audio.slice(0, 50)}... [${nodeData.audio.length} chars])` : "None"}
+          </span>
         </div>
 
         {/* Output Preview */}

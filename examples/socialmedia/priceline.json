@@ -1,0 +1,1101 @@
+{
+  "version": 1,
+  "id": "wf_1766156663642_h3il3apuw",
+  "name": "priceline",
+  "nodes": [
+    {
+      "id": "nanoBanana-4",
+      "type": "nanoBanana",
+      "position": {
+        "x": 1177.0208841362585,
+        "y": 345.0568275861393
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Show me a travel advertisement image of a family inside a cluttered, chaotic home living room. The central subject is a traveler wearing a nice summer dress over functional, and glasses. They are looking at a smartphone held in their hand with a slightly bored, overwhelmed expression and eyebrows raised, two fingers tapping the screen which displays a travel booking app interface (like Priceline). Around them, their family is in chaos: a partner looks exhausted trying to manage two young children who are crying and tangled in beach towels and open suitcases on the floor. The background is a blurred, colorful mix of bright sunlight streaming through a window, domestic clutter, toys, and laundry.\nThe image is a full-body shot from a low angle looking up at the group deeply embedded in their messy home.\nThe image is shot on Fuji Velvia film on a 55mm prime lens with a hard flash, the light is concentrated on the central subject and family, creating harsh shadows. The image is overexposed showing significant film grain and is oversaturated. The skin of all family members appears shiny (almost oily) from heat and flash, and there are harsh white reflections on the glasses frames and the phone screen.\n3:2 aspect ratio.\n\n",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "2K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qmra-l856et",
+          "img-mkh0qmtj-25kxv8",
+          "img-mkh0qmu9-n473al"
+        ],
+        "outputImageRef": "img-mkh0qm7x-s66f2b"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 893,
+        "height": 727
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 893,
+      "height": 727,
+      "resizing": false
+    },
+    {
+      "id": "prompt-5",
+      "type": "prompt",
+      "position": {
+        "x": 691.3233829297387,
+        "y": 1314.6554184113131
+      },
+      "data": {
+        "prompt": "Show me a travel advertisement image of a family inside a cluttered, chaotic home living room. The central subject is a traveler wearing a nice summer dress over functional, and glasses. They are looking at a smartphone held in their hand with a slightly bored, overwhelmed expression and eyebrows raised, two fingers tapping the screen which displays a travel booking app interface (like Priceline). Around them, their family is in chaos: a partner looks exhausted trying to manage two young children who are crying and tangled in beach towels and open suitcases on the floor. The background is a blurred, colorful mix of bright sunlight streaming through a window, domestic clutter, toys, and laundry.\nThe image is a full-body shot from a low angle looking up at the group deeply embedded in their messy home.\nThe image is shot on Fuji Velvia film on a 55mm prime lens with a hard flash, the light is concentrated on the central subject and family, creating harsh shadows. The image is overexposed showing significant film grain and is oversaturated. The skin of all family members appears shiny (almost oily) from heat and flash, and there are harsh white reflections on the glasses frames and the phone screen.\n3:2 aspect ratio.\n\n"
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 367,
+        "height": 357
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 367,
+      "height": 357,
+      "resizing": false
+    },
+    {
+      "id": "nanoBanana-6",
+      "type": "nanoBanana",
+      "position": {
+        "x": 2209.3580821855494,
+        "y": 357.52525718191225
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "1. Travel Lifestyle Portrait (Close, Candid, Atmospheric) Camera positioned very close to the faces of one parent and one child. They are cheek-to-cheek, laughing joyfully, looking off-camera at something exciting upon arrival (e.g., the ocean view). The angle is slightly offset, revealing bright, blurred tropical foliage in the background. Shallow depth of field captures the sweat and joy on their faces.\n\n2. High-Angle Three-Quarter Context Frame Camera positioned overhead but off-center (e.g., from a hotel balcony), looking down at the entire family navigating a patterned resort lobby floor. The parents are pulling the silver luggage, and the kids are skipping ahead, holding hands. The frame emphasizes the group dynamic within the architecture from above.\n\n3. Low-Angle Oblique Hero Frame Camera positioned low to the ground in the sand, angled obliquely upward. The entire family stands together on a beach at sunset, looking triumphantly at the horizon; one child is on a parent's shoulders. The silver aluminum luggage is planted firmly in the foreground, looking dominant against the colorful sky.\n\n4. Side-On Compression Frame (Long Lens) Camera placed far to one side of the family, using a tight focal length to compress space. The family is walking in a line along a busy boardwalk, seen in clean profile, silhouetted against a layered background of market stalls and palm trees. They are all smiling and holding hands.\n\n5. Intimate Transit Portrait From an Unexpected Height Camera positioned inside a transit vehicle (e.g., an open-air taxi or train), slightly elevated and looking down. The family is crammed together on a bench seat, happily exhausted. One parent has an arm around a sleeping child, while the other parent and child are sharing a snack and smiling. It feels like an authentic, unposed snapshot.\n\n6. Extreme Detail Frame From a Non-Intuitive Angle Camera positioned extremely close to the handle of the silver luggage. A small child’s hand is gripping the leather handle right next to an adult’s hand. This abstract detail emphasizes shared travel and connection.\n\nContinuity & Technical Requirements\n\nMaintain perfect fidelity in every frame: exact family members, their specific vacation wardrobe, the silver aluminum luggage, hair, and makeup. Environment (sunny, tropical destination), textures, and lighting must remain consistent. Depth of field shifts naturally with focal length. Photoreal textures and physically plausible light behavior required. Frames must feel like different camera placements within the same trip.\n\nAesthetic Override (Crucial): All keyframes must be the exact same aspect ratio, and exactly 6 keyframes should be output. Maintain the exact visual style in all keyframes, where the image is shot on Fuji Velvia film with a hard, direct flash, even in daylight. The light is concentrated on the subjects and fades slightly toward the edges of the frame (vignette). The image is over-exposed showing significant film grain and is highly oversaturated. The subjects' skin appears shiny (oily/humid from heat and flash), and there are harsh white reflections on the luggage and any glasses/sunglasses. The happiness must feel genuine but captured through this raw, gritty film aesthetic.\n\nOutput Format A) 2×3 Contact Sheet Image (Mandatory)\n\nInclude all 6 frames, each labeled with: Frame number Shot type",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "2K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qmy5-tt5lg7"
+        ],
+        "outputImageRef": "img-mkh0qmun-j157xi"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 1944,
+        "height": 1603
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 1944,
+      "height": 1603,
+      "resizing": false
+    },
+    {
+      "id": "prompt-7",
+      "type": "prompt",
+      "position": {
+        "x": 1311.4578694096563,
+        "y": 1201.9794968822234
+      },
+      "data": {
+        "prompt": "1. Travel Lifestyle Portrait (Close, Candid, Atmospheric) Camera positioned very close to the faces of one parent and one child. They are cheek-to-cheek, laughing joyfully, looking off-camera at something exciting upon arrival (e.g., the ocean view). The angle is slightly offset, revealing bright, blurred tropical foliage in the background. Shallow depth of field captures the sweat and joy on their faces.\n\n2. High-Angle Three-Quarter Context Frame Camera positioned overhead but off-center (e.g., from a hotel balcony), looking down at the entire family navigating a patterned resort lobby floor. The parents are pulling the silver luggage, and the kids are skipping ahead, holding hands. The frame emphasizes the group dynamic within the architecture from above.\n\n3. Low-Angle Oblique Hero Frame Camera positioned low to the ground in the sand, angled obliquely upward. The entire family stands together on a beach at sunset, looking triumphantly at the horizon; one child is on a parent's shoulders. The silver aluminum luggage is planted firmly in the foreground, looking dominant against the colorful sky.\n\n4. Side-On Compression Frame (Long Lens) Camera placed far to one side of the family, using a tight focal length to compress space. The family is walking in a line along a busy boardwalk, seen in clean profile, silhouetted against a layered background of market stalls and palm trees. They are all smiling and holding hands.\n\n5. Intimate Transit Portrait From an Unexpected Height Camera positioned inside a transit vehicle (e.g., an open-air taxi or train), slightly elevated and looking down. The family is crammed together on a bench seat, happily exhausted. One parent has an arm around a sleeping child, while the other parent and child are sharing a snack and smiling. It feels like an authentic, unposed snapshot.\n\n6. Extreme Detail Frame From a Non-Intuitive Angle Camera positioned extremely close to the handle of the silver luggage. A small child’s hand is gripping the leather handle right next to an adult’s hand. This abstract detail emphasizes shared travel and connection.\n\nContinuity & Technical Requirements\n\nMaintain perfect fidelity in every frame: exact family members, their specific vacation wardrobe, the silver aluminum luggage, hair, and makeup. Environment (sunny, tropical destination), textures, and lighting must remain consistent. Depth of field shifts naturally with focal length. Photoreal textures and physically plausible light behavior required. Frames must feel like different camera placements within the same trip.\n\nAesthetic Override (Crucial): All keyframes must be the exact same aspect ratio, and exactly 6 keyframes should be output. Maintain the exact visual style in all keyframes, where the image is shot on Fuji Velvia film with a hard, direct flash, even in daylight. The light is concentrated on the subjects and fades slightly toward the edges of the frame (vignette). The image is over-exposed showing significant film grain and is highly oversaturated. The subjects' skin appears shiny (oily/humid from heat and flash), and there are harsh white reflections on the luggage and any glasses/sunglasses. The happiness must feel genuine but captured through this raw, gritty film aesthetic.\n\nOutput Format A) 2×3 Contact Sheet Image (Mandatory)\n\nInclude all 6 frames, each labeled with: Frame number Shot type"
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 697,
+        "height": 843
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 697,
+      "height": 843,
+      "resizing": false
+    },
+    {
+      "id": "prompt-13",
+      "type": "prompt",
+      "position": {
+        "x": 4224.8068929284145,
+        "y": 680.5769177581211
+      },
+      "data": {
+        "prompt": "Isolate and amplify the image in row 1 column 1. Keep all details of the image in this image exactly the same, do not change the pose or any details of the model. Only output the single image from the six image grid. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "nanoBanana-28",
+      "type": "nanoBanana",
+      "position": {
+        "x": 4605.510144539107,
+        "y": 330.87863323055535
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Isolate and amplify the image in row 1 column 1. Keep all details of the image in this image exactly the same, do not change the pose or any details of the model. Only output the single image from the six image grid. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "idle",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qn0o-0dnemb"
+        ]
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 739,
+        "height": 562
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 739,
+      "height": 562,
+      "resizing": false
+    },
+    {
+      "id": "nanoBanana-30",
+      "type": "nanoBanana",
+      "position": {
+        "x": 4607.510144539107,
+        "y": 936.8786332305554
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Review the grid of six images. I want you to Isolate and upscale the second image in the first row of images. Do not change the pose or any details of the model, match the high angle and shot distance perfectly. It is critical that you only output a single image from the six image grid. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qn0o-0dnemb"
+        ],
+        "outputImageRef": "img-mkh0qn4n-pvtud2"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 739,
+        "height": 562
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 739,
+      "height": 562,
+      "resizing": false
+    },
+    {
+      "id": "nanoBanana-31",
+      "type": "nanoBanana",
+      "position": {
+        "x": 4617.510144539107,
+        "y": 1582.8786332305554
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Review the grid of six images. I want you to Isolate and upscale the image in the third column of the first row of images. Do not change the pose or any details of the model. Only output the single image from the six image grid. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qn0o-0dnemb"
+        ],
+        "outputImageRef": "img-mkh0qn6j-1mpd5c"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 739,
+        "height": 562
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 739,
+      "height": 562,
+      "resizing": false
+    },
+    {
+      "id": "nanoBanana-32",
+      "type": "nanoBanana",
+      "position": {
+        "x": 5861.510144539107,
+        "y": 325.62863323055535
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Review the grid of six images. I want you to Isolate and upscale the image in the first column of the second row of images. Do not change the pose or any details of the model. Only output the single image from the six image grid. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qn0o-0dnemb"
+        ],
+        "outputImageRef": "img-mkh0qn87-xt4i5q"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 739,
+        "height": 562
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 739,
+      "height": 562,
+      "resizing": false
+    },
+    {
+      "id": "nanoBanana-33",
+      "type": "nanoBanana",
+      "position": {
+        "x": 5863.510144539107,
+        "y": 923.6286332305554
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Review the grid of six images. I want you to Isolate and upscale the image in the second column of the second row of images. Do not change the pose or any details of the model, match the slight forward head tilt and high angle in the original image perfectly. Only output the single image from the six image grid. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qn0o-0dnemb"
+        ],
+        "outputImageRef": "img-mkh0qn8o-rvbvue"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 739,
+        "height": 562
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 739,
+      "height": 562,
+      "resizing": false
+    },
+    {
+      "id": "nanoBanana-34",
+      "type": "nanoBanana",
+      "position": {
+        "x": 5865.510144539107,
+        "y": 1526.6286332305554
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Review the grid of six images. I want you to Isolate and upscale the image in the third column of the second row of images. Do not change the pose or any details of the model. Only output the single image from the six image grid. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qn0o-0dnemb"
+        ],
+        "outputImageRef": "img-mkh0qn9j-dfde1g"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 739,
+        "height": 562
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 739,
+      "height": 562,
+      "resizing": false
+    },
+    {
+      "id": "prompt-35",
+      "type": "prompt",
+      "position": {
+        "x": 4275.8068929284145,
+        "y": 1285.576917758121
+      },
+      "data": {
+        "prompt": "Review the grid of six images. I want you to Isolate and upscale the second image in the first row of images. Do not change the pose or any details of the model, match the high angle and shot distance perfectly. It is critical that you only output a single image from the six image grid. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "prompt-36",
+      "type": "prompt",
+      "position": {
+        "x": 4277.8068929284145,
+        "y": 1919.576917758121
+      },
+      "data": {
+        "prompt": "Review the grid of six images. I want you to Isolate and upscale the image in the third column of the first row of images. Do not change the pose or any details of the model. Only output the single image from the six image grid. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "prompt-37",
+      "type": "prompt",
+      "position": {
+        "x": 5518.065791801821,
+        "y": 662.0113304805607
+      },
+      "data": {
+        "prompt": "Review the grid of six images. I want you to Isolate and upscale the image in the first column of the second row of images. Do not change the pose or any details of the model. Only output the single image from the six image grid. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "prompt-38",
+      "type": "prompt",
+      "position": {
+        "x": 5527.8068929284145,
+        "y": 1269.576917758121
+      },
+      "data": {
+        "prompt": "Review the grid of six images. I want you to Isolate and upscale the image in the second column of the second row of images. Do not change the pose or any details of the model, match the slight forward head tilt and high angle in the original image perfectly. Only output the single image from the six image grid. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "prompt-39",
+      "type": "prompt",
+      "position": {
+        "x": 5525.8068929284145,
+        "y": 1869.576917758121
+      },
+      "data": {
+        "prompt": "Review the grid of six images. I want you to Isolate and upscale the image in the third column of the second row of images. Do not change the pose or any details of the model. Only output the single image from the six image grid. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "nanoBanana-40",
+      "type": "nanoBanana",
+      "position": {
+        "x": 7289.691544622008,
+        "y": 321.01015424410343
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Show me a wide angle close up of the model. The model is holding one wrist vertically in front of him, the opposite hand is pulling down the sleeve of the hoodie to display the watch. The hand that is pulling down the sleeve has a two finger ring on the last two digits of his hand with the letters 'F.E.D' encrusted into the front face. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": true,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qncf-esnorb",
+          "img-mkh0qndj-8z5i3d",
+          "img-mkh0qneb-ojoypp"
+        ],
+        "outputImageRef": "img-mkh0qna1-zz7xjg"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 652,
+        "height": 592
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 652,
+      "height": 592,
+      "resizing": false
+    },
+    {
+      "id": "prompt-41",
+      "type": "prompt",
+      "position": {
+        "x": 6915.214500050984,
+        "y": 649.200116300939
+      },
+      "data": {
+        "prompt": "Show me a wide angle close up of the model. The model is holding one wrist vertically in front of him, the opposite hand is pulling down the sleeve of the hoodie to display the watch. The hand that is pulling down the sleeve has a two finger ring on the last two digits of his hand with the letters 'F.E.D' encrusted into the front face. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "nanoBanana-42",
+      "type": "nanoBanana",
+      "position": {
+        "x": 7297.81481713955,
+        "y": 955.3056690164647
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Show me a wide angle worms eye view of the model standing, his right foot is extended in front of him, showing he is wearing the shoes in the reference image.  Maintain the setting perfectly, include the three finger ring on the models hand, and have his foot angled slightly to the side to highlight the detailing of the shoes",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qnfs-t039bf",
+          "img-mkh0qndj-8z5i3d",
+          "img-mkh0qng8-ch9p5t"
+        ],
+        "outputImageRef": "img-mkh0qnf4-txhqge"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 634,
+        "height": 546
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 634,
+      "height": 546,
+      "resizing": false
+    },
+    {
+      "id": "prompt-43",
+      "type": "prompt",
+      "position": {
+        "x": 6957.5516315620525,
+        "y": 1284.488407557924
+      },
+      "data": {
+        "prompt": "Show me a wide angle worms eye view of the model standing, his right foot is extended in front of him, showing he is wearing the shoes in the reference image.  Maintain the setting perfectly, include the three finger ring on the models hand, and have his foot angled slightly to the side to highlight the detailing of the shoes"
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-44",
+      "type": "imageInput",
+      "position": {
+        "x": 6977.459702066549,
+        "y": 956.576460963197
+      },
+      "data": {
+        "image": null,
+        "filename": "reebok-x-playstation-first-look-v0-oqmuw7eqb5sf1.webp",
+        "dimensions": {
+          "width": 1080,
+          "height": 1350
+        },
+        "imageRef": "img-mkh0qnfs-t039bf"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "nanoBanana-45",
+      "type": "nanoBanana",
+      "position": {
+        "x": 7323.66787165095,
+        "y": 1576.5143656980872
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Tight shot of the model reaching into the side of the kangaroo pouch of the hoodie and partially showing the gameboy advance. ",
+        "outputImage": null,
+        "aspectRatio": "3:2",
+        "resolution": "1K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "inputImageRefs": [
+          "img-mkh0qnhw-9vn4g5",
+          "img-mkh0qnit-ev9ndh",
+          "img-mkh0qng8-ch9p5t"
+        ],
+        "outputImageRef": "img-mkh0qnhd-w9d2vz"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 604,
+        "height": 524
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 604,
+      "height": 524,
+      "resizing": false
+    },
+    {
+      "id": "prompt-46",
+      "type": "prompt",
+      "position": {
+        "x": 6978.632276157321,
+        "y": 1887.92288233026
+      },
+      "data": {
+        "prompt": "Tight shot of the model reaching into the side of the kangaroo pouch of the hoodie and partially showing the gameboy advance. "
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-51",
+      "type": "imageInput",
+      "position": {
+        "x": 661.9622179534808,
+        "y": 320.9443937373294
+      },
+      "data": {
+        "image": null,
+        "filename": "Screenshot 2025-12-19 at 9.31.40 AM.png",
+        "dimensions": {
+          "width": 932,
+          "height": 840
+        },
+        "imageRef": "img-mkh0qmra-l856et"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-52",
+      "type": "imageInput",
+      "position": {
+        "x": 661.9622179534808,
+        "y": 620.9443937373294
+      },
+      "data": {
+        "image": null,
+        "filename": "Screenshot 2025-12-19 at 10.45.40 AM.png",
+        "dimensions": {
+          "width": 350,
+          "height": 444
+        },
+        "imageRef": "img-mkh0qmtj-25kxv8"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-53",
+      "type": "imageInput",
+      "position": {
+        "x": 661.9622179534808,
+        "y": 920.9443937373294
+      },
+      "data": {
+        "image": null,
+        "filename": "images.jpg",
+        "dimensions": {
+          "width": 363,
+          "height": 139
+        },
+        "imageRef": "img-mkh0qmu9-n473al"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-54",
+      "type": "imageInput",
+      "position": {
+        "x": 6919.198296810962,
+        "y": 198.90466181737156
+      },
+      "data": {
+        "image": null,
+        "filename": "patek.jpg",
+        "dimensions": {
+          "width": 894,
+          "height": 894
+        },
+        "imageRef": "img-mkh0qncf-esnorb"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-55",
+      "type": "imageInput",
+      "position": {
+        "x": 6897.524065275238,
+        "y": 1558.7379212358828
+      },
+      "data": {
+        "image": null,
+        "filename": "GB-1064_2_43a6ef1c-2b8d-4f9e-9e6b-6ce4f363dff1.webp",
+        "dimensions": {
+          "width": 3000,
+          "height": 3000
+        },
+        "imageRef": "img-mkh0qnit-ev9ndh"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "imageInput-56",
+      "type": "imageInput",
+      "position": {
+        "x": 706.7196862762812,
+        "y": 2326.307762040455
+      },
+      "data": {
+        "image": null,
+        "filename": "history-1766159684647.png",
+        "dimensions": {
+          "width": 1264,
+          "height": 848
+        },
+        "imageRef": "img-mkh0qnj9-ffynin"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "prompt-5",
+      "sourceHandle": "text",
+      "target": "nanoBanana-4",
+      "targetHandle": "text",
+      "id": "edge-prompt-5-nanoBanana-4-text-text",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-4",
+      "sourceHandle": "image",
+      "target": "nanoBanana-6",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-4-nanoBanana-6-image-image",
+      "selected": false
+    },
+    {
+      "source": "prompt-7",
+      "sourceHandle": "text",
+      "target": "nanoBanana-6",
+      "targetHandle": "text",
+      "id": "edge-prompt-7-nanoBanana-6-text-text",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-6",
+      "sourceHandle": "image",
+      "target": "nanoBanana-28",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-6-nanoBanana-28-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-13",
+      "sourceHandle": "text",
+      "target": "nanoBanana-28",
+      "targetHandle": "text",
+      "id": "edge-prompt-13-nanoBanana-28-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-35",
+      "sourceHandle": "text",
+      "target": "nanoBanana-30",
+      "targetHandle": "text",
+      "id": "edge-prompt-35-nanoBanana-30-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-36",
+      "sourceHandle": "text",
+      "target": "nanoBanana-31",
+      "targetHandle": "text",
+      "id": "edge-prompt-36-nanoBanana-31-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-39",
+      "sourceHandle": "text",
+      "target": "nanoBanana-34",
+      "targetHandle": "text",
+      "id": "edge-prompt-39-nanoBanana-34-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-38",
+      "sourceHandle": "text",
+      "target": "nanoBanana-33",
+      "targetHandle": "text",
+      "id": "edge-prompt-38-nanoBanana-33-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "prompt-37",
+      "sourceHandle": "text",
+      "target": "nanoBanana-32",
+      "targetHandle": "text",
+      "id": "edge-prompt-37-nanoBanana-32-text-text",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "nanoBanana-6",
+      "sourceHandle": "image",
+      "target": "nanoBanana-30",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-6-nanoBanana-30-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "nanoBanana-6",
+      "sourceHandle": "image",
+      "target": "nanoBanana-31",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-6-nanoBanana-31-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "nanoBanana-6",
+      "sourceHandle": "image",
+      "target": "nanoBanana-32",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-6-nanoBanana-32-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "nanoBanana-6",
+      "sourceHandle": "image",
+      "target": "nanoBanana-33",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-6-nanoBanana-33-image-image",
+      "selected": false
+    },
+    {
+      "type": "editable",
+      "animated": false,
+      "source": "nanoBanana-6",
+      "sourceHandle": "image",
+      "target": "nanoBanana-34",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-6-nanoBanana-34-image-image",
+      "selected": false
+    },
+    {
+      "source": "prompt-41",
+      "sourceHandle": "text",
+      "target": "nanoBanana-40",
+      "targetHandle": "text",
+      "id": "edge-prompt-41-nanoBanana-40-text-text",
+      "selected": false
+    },
+    {
+      "source": "prompt-43",
+      "sourceHandle": "text",
+      "target": "nanoBanana-42",
+      "targetHandle": "text",
+      "id": "edge-prompt-43-nanoBanana-42-text-text",
+      "selected": false
+    },
+    {
+      "source": "imageInput-44",
+      "sourceHandle": "image",
+      "target": "nanoBanana-42",
+      "targetHandle": "image",
+      "id": "edge-imageInput-44-nanoBanana-42-image-image",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-42",
+      "sourceHandle": "image",
+      "target": "nanoBanana-45",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-42-nanoBanana-45-image-image",
+      "selected": false
+    },
+    {
+      "source": "prompt-46",
+      "sourceHandle": "text",
+      "target": "nanoBanana-45",
+      "targetHandle": "text",
+      "id": "edge-prompt-46-nanoBanana-45-text-text",
+      "selected": false
+    },
+    {
+      "source": "imageInput-51",
+      "sourceHandle": "image",
+      "target": "nanoBanana-4",
+      "targetHandle": "image",
+      "id": "edge-imageInput-51-nanoBanana-4-image-image",
+      "selected": false
+    },
+    {
+      "source": "imageInput-52",
+      "sourceHandle": "image",
+      "target": "nanoBanana-4",
+      "targetHandle": "image",
+      "id": "edge-imageInput-52-nanoBanana-4-image-image",
+      "selected": false
+    },
+    {
+      "source": "imageInput-53",
+      "sourceHandle": "image",
+      "target": "nanoBanana-4",
+      "targetHandle": "image",
+      "id": "edge-imageInput-53-nanoBanana-4-image-image",
+      "selected": false
+    },
+    {
+      "source": "imageInput-54",
+      "sourceHandle": "image",
+      "target": "nanoBanana-40",
+      "targetHandle": "image",
+      "id": "edge-imageInput-54-nanoBanana-40-image-image",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-31",
+      "sourceHandle": "image",
+      "target": "nanoBanana-40",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-31-nanoBanana-40-image-image",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-31",
+      "sourceHandle": "image",
+      "target": "nanoBanana-42",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-31-nanoBanana-42-image-image",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-33",
+      "sourceHandle": "image",
+      "target": "nanoBanana-40",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-33-nanoBanana-40-image-image",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-40",
+      "sourceHandle": "image",
+      "target": "nanoBanana-42",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-40-nanoBanana-42-image-image",
+      "selected": false
+    },
+    {
+      "source": "imageInput-55",
+      "sourceHandle": "image",
+      "target": "nanoBanana-45",
+      "targetHandle": "image",
+      "id": "edge-imageInput-55-nanoBanana-45-image-image",
+      "selected": false
+    },
+    {
+      "source": "nanoBanana-40",
+      "sourceHandle": "image",
+      "target": "nanoBanana-45",
+      "targetHandle": "image",
+      "id": "edge-nanoBanana-40-nanoBanana-45-image-image",
+      "selected": false
+    }
+  ],
+  "edgeStyle": "curved"
+}

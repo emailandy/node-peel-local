@@ -129,6 +129,8 @@ export function ImageInputNode({ id, data, selected }: NodeProps<ImageInputNodeT
               </span>
             )}
           </div>
+
+
         </div>
       ) : (
         <div

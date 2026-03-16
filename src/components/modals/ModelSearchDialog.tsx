@@ -473,28 +473,7 @@ export function ModelSearchDialog({
               >
                 <GeminiIcon />
               </button>
-              <button
-                onClick={() => setProviderFilter("replicate")}
-                title="Replicate"
-                className={`p-2 rounded transition-colors ${
-                  providerFilter === "replicate"
-                    ? "bg-blue-500/20 text-blue-300"
-                    : "text-neutral-400 hover:text-blue-300 hover:bg-neutral-700"
-                }`}
-              >
-                <ReplicateIcon />
-              </button>
-              <button
-                onClick={() => setProviderFilter("fal")}
-                title="fal.ai"
-                className={`p-2 rounded transition-colors ${
-                  providerFilter === "fal"
-                    ? "bg-yellow-500/20 text-yellow-300"
-                    : "text-neutral-400 hover:text-yellow-300 hover:bg-neutral-700"
-                }`}
-              >
-                <FalIcon />
-              </button>
+              {/* Replicate button removed per user request */}
             </div>
 
             {/* Capability Filter */}

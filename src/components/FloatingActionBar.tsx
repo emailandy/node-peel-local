@@ -5,6 +5,8 @@ import { useWorkflowStore } from "@/store/workflowStore";
 import { NodeType, ProviderType } from "@/types";
 import { useReactFlow } from "@xyflow/react";
 import { ModelSearchDialog } from "./modals/ModelSearchDialog";
+import { AvatarBrowserDialog } from "./modals/AvatarBrowserDialog";
+import { AudioBrowserDialog } from "./modals/AudioBrowserDialog";
 import { EnvStatusResponse } from "@/app/api/env-status/route";
 
 // Get the center of the React Flow pane in screen coordinates
@@ -204,6 +206,10 @@ export function FloatingActionBar() {
     setModelSearchOpen,
     modelSearchOpen,
     modelSearchProvider,
+    avatarBrowserOpen,
+    setAvatarBrowserOpen,
+    audioBrowserOpen,
+    setAudioBrowserOpen,
   } = useWorkflowStore();
   const [runMenuOpen, setRunMenuOpen] = useState(false);
   const runMenuRef = useRef<HTMLDivElement>(null);
@@ -280,6 +286,19 @@ export function FloatingActionBar() {
         <NodeButton type="imageInput" label="Image" />
         <NodeButton type="annotation" label="Annotate" />
         <NodeButton type="prompt" label="Prompt" />
+        <NodeButton type="audio" label="Audio" />
+        <button
+          onClick={() => setAvatarBrowserOpen(true)}
+          className="px-2.5 py-1.5 text-[11px] font-medium text-neutral-400 hover:text-neutral-100 hover:bg-neutral-700 rounded transition-colors"
+        >
+          Avatar
+        </button>
+        <button
+          onClick={() => setAudioBrowserOpen(true)}
+          className="px-2.5 py-1.5 text-[11px] font-medium text-neutral-400 hover:text-neutral-100 hover:bg-neutral-700 rounded transition-colors"
+        >
+          Sounds
+        </button>
         <GenerateComboButton />
         <NodeButton type="aiCritic" label="Guardrail" />
         <NodeButton type="variant" label="Variant" />
@@ -445,6 +464,14 @@ export function FloatingActionBar() {
         isOpen={modelSearchOpen}
         onClose={() => setModelSearchOpen(false)}
         initialProvider={modelSearchProvider}
+      />
+      <AvatarBrowserDialog
+        isOpen={avatarBrowserOpen}
+        onClose={() => setAvatarBrowserOpen(false)}
+      />
+      <AudioBrowserDialog
+        isOpen={audioBrowserOpen}
+        onClose={() => setAudioBrowserOpen(false)}
       />
     </div>
   );

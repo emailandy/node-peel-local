@@ -13,7 +13,8 @@ export type NodeType =
   | "aiCritic"
   | "variant"
   | "generateVideo"
-  | "videoStitch";
+  | "videoStitch"
+  | "audio";
 
 // Aspect Ratios (supported by both Nano Banana and Nano Banana Pro)
 export type AspectRatio = "1:1" | "2:3" | "3:2" | "3:4" | "4:3" | "4:5" | "5:4" | "9:16" | "16:9" | "21:9";
@@ -123,6 +124,7 @@ export interface AnnotationNodeData extends BaseNodeData {
 // Prompt Node Data
 export interface PromptNodeData extends BaseNodeData {
   prompt: string;
+  referenceImage?: string | null;
 }
 
 // Image History Item (for tracking generated images)
@@ -145,8 +147,34 @@ export interface CarouselImageItem {
   model: ModelType;
 }
 
+// Provider Settings Types
+export interface SingleProviderConfig {
+  id: string;
+  name: string;
+  enabled: boolean;
+  apiKey: string | null;
+  apiKeyEnvVar: string;
+}
+
+export interface ProviderSettings {
+  providers: {
+    gemini: SingleProviderConfig;
+    openai: SingleProviderConfig;
+    replicate: SingleProviderConfig;
+    fal: SingleProviderConfig;
+  };
+}
+
+// Recent Model Type
+export interface RecentModel {
+  provider: ProviderType;
+  modelId: string;
+  displayName: string;
+  timestamp: number;
+}
+
 // Provider Type
-export type ProviderType = "replicate" | "fal";
+export type ProviderType = "replicate" | "fal" | "openai" | "gemini";
 
 // Selected Model for multi-provider support
 export interface SelectedModel {
@@ -187,6 +215,9 @@ export interface NanoBananaNodeData extends BaseNodeData {
   error: string | null;
   imageHistory: CarouselImageItem[]; // Carousel history (IDs only)
   selectedHistoryIndex: number; // Currently selected image in carousel
+  selectedModel?: SelectedModel;
+  parameters?: Record<string, unknown>;
+  inputSchema?: ModelInputDef[];
 }
 
 // Video Node Data
@@ -197,11 +228,17 @@ export interface VideoNodeData extends BaseNodeData {
   outputVideo: string | null; // URL or base64
   outputVideoRef?: string;
   model: VideoModelType;
+
+  // Frame inputs for interpolation
+  firstFrameImage?: string | null;
+  lastFrameImage?: string | null;
+
   negativePrompt?: string;
   aspectRatio: "16:9" | "9:16";
   resolution: "720p" | "1080p" | "4k";
   duration: "4" | "6" | "8";
   personGeneration?: "allow_all" | "allow_adult" | "dont_allow";
+  cameraMovement?: string;
   status: NodeStatus;
   error: string | null;
 }
@@ -224,6 +261,8 @@ export interface LLMGenerateNodeData extends BaseNodeData {
 export interface OutputNodeData extends BaseNodeData {
   image: string | null;
   imageRef?: string;  // External image reference for storage optimization
+  video?: string | null;
+  contentType?: string;
 }
 
 // Split Grid Node Data (Utility Node)
@@ -253,6 +292,7 @@ export interface SplitGridNodeData extends BaseNodeData {
 // AI Critic Node Data (Guardrail)
 export interface AICriticNodeData extends BaseNodeData {
   inputVideo: string | null; // URL or base64
+  inputImage: string | null; // URL or base64
   inputPrompt: string | null;
   criteria: string;
   score: number | null;
@@ -267,10 +307,11 @@ export interface AICriticNodeData extends BaseNodeData {
 export interface VariantNodeData extends BaseNodeData {
   inputImage: string | null; // ControlNet/IP-Adapter input
   inputPrompt: string | null;
-  variantMode: "demographics" | "style"; // Mode selection
+  variantMode: "demographics" | "style" | "reframe"; // Mode selection
   ethnicities: string[]; // Selected options (Demographics mode)
   genders: string[]; // Selected options (Demographics mode)
   styles: string[]; // Selected options (Style mode)
+  perspectives: string[]; // Selected options (Reframe mode)
   variantCount: number; // Number of images to generate (1-4)
   ratio: AspectRatio;
   gridSize: "1x1" | "2x2" | "3x3";
@@ -300,7 +341,19 @@ export interface GenerateVideoNodeData extends BaseNodeData {
 // Video Stitch Node Data
 export interface VideoStitchNodeData extends BaseNodeData {
   inputVideos: string[]; // URLs of connected videos
+  audio?: string | null; // Optional audio to merge
   outputVideo: string | null;
+  status: NodeStatus;
+  error: string | null;
+}
+
+// Audio Node Data
+export interface AudioNodeData extends BaseNodeData {
+  audio: string | null; // Base64 or URL
+  audioRef?: string;
+  filename: string | null;
+  duration?: number;
+  inputPrompt?: string; // For Lyria generation
   status: NodeStatus;
   error: string | null;
 }
@@ -318,7 +371,8 @@ export type WorkflowNodeData =
   | AICriticNodeData
   | VariantNodeData
   | VideoStitchNodeData
-  | GenerateVideoNodeData;
+  | GenerateVideoNodeData
+  | AudioNodeData;
 
 // Workflow Node with typed data (extended with optional groupId)
 export type WorkflowNode = Node<WorkflowNodeData, NodeType> & {
@@ -334,7 +388,7 @@ export interface WorkflowEdgeData extends Record<string, unknown> {
 export type WorkflowEdge = Edge<WorkflowEdgeData>;
 
 // Handle Types for connections
-export type HandleType = "image" | "text";
+export type HandleType = "image" | "text" | "video" | "audio";
 
 // API Request/Response types for Image Generation
 export interface GenerateRequest {
@@ -362,7 +416,7 @@ export interface LLMGenerateRequest {
   model: LLMModelType;
   temperature?: number;
   maxTokens?: number;
-  enhancementType?: "image" | "video" | "branding" | "product" | "editing" | "logic" | "content";
+  enhancementType?: "image" | "video" | "branding" | "product" | "editing" | "logic" | "content" | "avatar" | "character" | "hair" | "portrait";
 }
 
 export interface LLMGenerateResponse {

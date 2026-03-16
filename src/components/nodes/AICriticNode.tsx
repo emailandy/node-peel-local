@@ -61,10 +61,59 @@ export function AICriticNode({ id, data, selected }: NodeProps<AICriticNodeType>
       <Handle
         type="target"
         position={Position.Left}
+        id="image"
+        style={{ top: "30%" }}
+        className="w-3 h-3 bg-blue-500"
+      />
+      {/* Image Label */}
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+        style={{
+          right: `calc(100% + 8px)`,
+          top: "calc(30% - 7px)",
+          color: "var(--handle-color-image)",
+        }}
+      >
+        Image
+      </div>
+
+      <Handle
+        type="target"
+        position={Position.Left}
         id="video"
         style={{ top: "50%" }}
         className="w-3 h-3 bg-blue-500"
       />
+      {/* Video Label */}
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+        style={{
+          right: `calc(100% + 8px)`,
+          top: "calc(50% - 7px)",
+          color: "var(--handle-color-video)",
+        }}
+      >
+        Video
+      </div>
+
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="text"
+        style={{ top: "70%" }}
+        className="w-3 h-3 bg-blue-500"
+      />
+      {/* Prompt Label */}
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+        style={{
+          right: `calc(100% + 8px)`,
+          top: "calc(70% - 7px)",
+          color: "var(--handle-color-text)",
+        }}
+      >
+        Prompt
+      </div>
 
       {/* Main Content */}
       <div className="flex flex-col gap-3 p-1">
@@ -104,21 +153,55 @@ export function AICriticNode({ id, data, selected }: NodeProps<AICriticNodeType>
         )}
 
         {/* Video Preview (Mini) */}
-        {nodeData.inputVideo && (
+        {/* Media Preview (Mini) */}
+        {(nodeData.inputVideo || nodeData.inputImage) && (
           <div className="relative h-16 bg-black rounded overflow-hidden opacity-50 hover:opacity-100 transition-opacity">
-            <video src={nodeData.inputVideo} className="w-full h-full object-contain" />
+            {nodeData.inputVideo ? (
+              <video src={nodeData.inputVideo} className="w-full h-full object-contain" />
+            ) : (
+              <img src={nodeData.inputImage!} className="w-full h-full object-contain" alt="Input" />
+            )}
           </div>
         )}
 
         <div className="h-px bg-neutral-800 my-1" />
 
-        {/* Settings Toggle */}
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className="flex items-center text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors"
-        >
-          <span className="mr-1">{showSettings ? "▼" : "▶"}</span> Settings
-        </button>
+        {/* Controls */}
+        <div className="flex items-center justify-between mt-1">
+          {/* Settings Toggle */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex items-center text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            <span className="mr-1">{showSettings ? "▼" : "▶"}</span> Settings
+          </button>
+
+          {/* Run Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const state = useWorkflowStore.getState();
+              if (!state.isRunning) {
+                state.regenerateNode(id);
+              }
+            }}
+            disabled={nodeData.status === "loading"}
+            className={`p-1 rounded-full transition-all ${nodeData.status === "loading"
+                ? "bg-neutral-800 text-neutral-600 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg hover:shadow-blue-500/50"
+              }`}
+            title="Run Critic"
+          >
+            {nodeData.status === "loading" ? (
+              <div className="w-3 h-3 border-2 border-neutral-600 border-t-neutral-400 rounded-full animate-spin" />
+            ) : (
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </button>
+        </div>
 
         {showSettings && (
           <div className="flex flex-col gap-2 mt-1 animate-in slide-in-from-top-2 fade-in duration-200">
@@ -164,8 +247,20 @@ export function AICriticNode({ id, data, selected }: NodeProps<AICriticNodeType>
         type="source"
         position={Position.Right}
         id="video"
+        style={{ top: "50%" }}
         className="w-3 h-3 bg-blue-500"
       />
+      {/* Output Label */}
+      <div
+        className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none"
+        style={{
+          left: `calc(100% + 8px)`,
+          top: "calc(50% - 7px)",
+          color: "var(--handle-color-video)",
+        }}
+      >
+        Video
+      </div>
     </BaseNode>
   );
 }

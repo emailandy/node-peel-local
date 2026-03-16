@@ -11,3 +11,4 @@ export { AICriticNode } from "./AICriticNode";
 export { VariantNode } from "./VariantNode";
 export { VideoStitchNode } from "./VideoStitchNode";
 export { GroupNode } from "./GroupNode";
+export { AudioNode } from "./AudioNode";

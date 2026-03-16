@@ -33,7 +33,8 @@ export type NodeType =
   | "output"
   | "video"
   | "aiCritic"
-  | "variant";
+  | "variant"
+  | "videoStitch";
 
 /**
  * Node execution status
@@ -62,16 +63,14 @@ export interface PromptNodeData extends BaseNodeData {
  */
 export interface ImageHistoryItem {
   id: string;
-  image: string; // Base64 data URL
-  timestamp: number; // For display & sorting
-  prompt: string; // The prompt used
+  image: string;          // Base64 data URL
+  timestamp: number;      // For display & sorting
+  prompt: string;         // The prompt used
   aspectRatio: AspectRatio;
   model: ModelType;
 }
 
-/**
- * Carousel image item for per-node history (IDs only, images stored externally)
- */
+// Carousel Image Item (for per-node history)
 export interface CarouselImageItem {
   id: string;
   timestamp: number;
@@ -80,19 +79,15 @@ export interface CarouselImageItem {
   model: ModelType;
 }
 
-/**
- * Carousel video item for per-node video history
- */
+// Carousel Video Item
 export interface CarouselVideoItem {
   id: string;
   timestamp: number;
   prompt: string;
-  model: string; // Model ID for video (not ModelType since external providers)
+  model: string;
 }
 
-/**
- * Model input definition for dynamic handles
- */
+// Model input definition
 export interface ModelInputDef {
   name: string;
   type: "image" | "text";
@@ -101,49 +96,43 @@ export interface ModelInputDef {
   description?: string;
 }
 
-/**
- * Nano Banana node - AI image generation
- */
+// Nano Banana Node Data (Image Generation)
 export interface NanoBananaNodeData extends BaseNodeData {
   inputImages: string[]; // Now supports multiple images
-  inputImageRefs?: string[]; // External image references for storage optimization
+  inputImageRefs?: string[];  // External image references for storage optimization
   inputPrompt: string | null;
   outputImage: string | null;
-  outputImageRef?: string; // External image reference for storage optimization
+  outputImageRef?: string;  // External image reference for storage optimization
   aspectRatio: AspectRatio;
   resolution: Resolution; // Only used by Nano Banana Pro
   model: ModelType;
-  selectedModel?: SelectedModel; // Multi-provider model selection (optional for backward compat)
+  selectedModel?: SelectedModel;
   useGoogleSearch: boolean; // Only available for Nano Banana Pro
-  parameters?: Record<string, unknown>; // Model-specific parameters for external providers
-  inputSchema?: ModelInputDef[]; // Model's input schema for dynamic handles
+  parameters?: Record<string, unknown>;
+  inputSchema?: ModelInputDef[];
   status: NodeStatus;
   error: string | null;
   imageHistory: CarouselImageItem[]; // Carousel history (IDs only)
   selectedHistoryIndex: number; // Currently selected image in carousel
 }
 
-/**
- * Generate Video node - AI video generation
- */
+// Generate Video node - AI video generation (Upstream)
 export interface GenerateVideoNodeData extends BaseNodeData {
   inputImages: string[];
-  inputImageRefs?: string[]; // External image references for storage optimization
+  inputImageRefs?: string[];
   inputPrompt: string | null;
-  outputVideo: string | null; // Video data URL or URL
-  outputVideoRef?: string; // External video reference for storage optimization
-  selectedModel?: SelectedModel; // Required for video generation (no legacy fallback)
-  parameters?: Record<string, unknown>; // Model-specific parameters
-  inputSchema?: ModelInputDef[]; // Model's input schema for dynamic handles
+  outputVideo: string | null;
+  outputVideoRef?: string;
+  selectedModel?: SelectedModel;
+  parameters?: Record<string, unknown>;
+  inputSchema?: ModelInputDef[];
   status: NodeStatus;
   error: string | null;
-  videoHistory: CarouselVideoItem[]; // Carousel history (IDs only)
-  selectedVideoHistoryIndex: number; // Currently selected video in carousel
+  videoHistory: CarouselVideoItem[];
+  selectedVideoHistoryIndex: number;
 }
 
-/**
- * Video Node Data - Keeping specifically if different from GenerateVideo
- */
+// Video Node Data
 export interface VideoNodeData extends BaseNodeData {
   inputPrompt: string | null;
   inputImages: string[]; // Optional image conditioning
@@ -151,23 +140,22 @@ export interface VideoNodeData extends BaseNodeData {
   outputVideo: string | null; // URL or base64
   outputVideoRef?: string;
   model: VideoModelType;
+
   negativePrompt?: string;
   aspectRatio: "16:9" | "9:16";
   resolution: "720p" | "1080p" | "4k";
   duration: "4" | "6" | "8";
-  cameraMovement?: string;
   personGeneration?: "allow_all" | "allow_adult" | "dont_allow";
+  cameraMovement?: string;
   status: NodeStatus;
   error: string | null;
 }
 
-/**
- * LLM Generate node - AI text generation
- */
+// LLM Generate Node Data (Text Generation)
 export interface LLMGenerateNodeData extends BaseNodeData {
   inputPrompt: string | null;
   inputImages: string[];
-  inputImageRefs?: string[]; // External image references for storage optimization
+  inputImageRefs?: string[];  // External image references for storage optimization
   outputText: string | null;
   provider: LLMProvider;
   model: LLMModelType;
@@ -177,23 +165,19 @@ export interface LLMGenerateNodeData extends BaseNodeData {
   error: string | null;
 }
 
-/**
- * Output node - displays final workflow results
- */
+// Output Node Data
 export interface OutputNodeData extends BaseNodeData {
   image: string | null;
-  imageRef?: string; // External image reference for storage optimization
-  video?: string | null; // Video data URL or HTTP URL
-  contentType?: "image" | "video"; // Explicit content type hint
+  imageRef?: string;  // External image reference for storage optimization
+  video?: string | null;
+  contentType?: string;
 }
 
-/**
- * Split Grid node - splits image into grid cells for parallel processing
- */
+// Split Grid Node Data (Utility Node)
 export interface SplitGridNodeData extends BaseNodeData {
   sourceImage: string | null;
-  sourceImageRef?: string; // External image reference for storage optimization
-  targetCount: number; // 4, 6, 8, 9, or 10
+  sourceImageRef?: string;  // External image reference for storage optimization
+  targetCount: number;  // 4, 6, 8, 9, or 10
   defaultPrompt: string;
   generateSettings: {
     aspectRatio: AspectRatio;
@@ -213,11 +197,10 @@ export interface SplitGridNodeData extends BaseNodeData {
   error: string | null;
 }
 
-/**
- * AI Critic Node Data (Guardrail)
- */
+// AI Critic Node Data (Guardrail)
 export interface AICriticNodeData extends BaseNodeData {
   inputVideo: string | null; // URL or base64
+  inputImage: string | null; // URL or base64
   inputPrompt: string | null;
   criteria: string;
   score: number | null;
@@ -228,16 +211,15 @@ export interface AICriticNodeData extends BaseNodeData {
   error: string | null;
 }
 
-/**
- * Demographic Variant Generator Node Data
- */
+// Demographic Variant Generator Node Data
 export interface VariantNodeData extends BaseNodeData {
   inputImage: string | null; // ControlNet/IP-Adapter input
   inputPrompt: string | null;
-  variantMode: "demographics" | "style"; // Mode selection
+  variantMode: "demographics" | "style" | "reframe"; // Mode selection
   ethnicities: string[]; // Selected options (Demographics mode)
   genders: string[]; // Selected options (Demographics mode)
   styles: string[]; // Selected options (Style mode)
+  perspectives: string[]; // Selected options (Reframe mode)
   variantCount: number; // Number of images to generate (1-4)
   ratio: AspectRatio;
   gridSize: "1x1" | "2x2" | "3x3";
@@ -247,9 +229,15 @@ export interface VariantNodeData extends BaseNodeData {
   results: Array<{ id: string; image: string; label: string }>; // label = "South Asian Male" or "Cyberpunk"
 }
 
-/**
- * Union of all node data types
- */
+// Video Stitch Node Data
+export interface VideoStitchNodeData extends BaseNodeData {
+  inputVideos: string[]; // URLs of connected videos
+  outputVideo: string | null;
+  status: NodeStatus;
+  error: string | null;
+}
+
+// Union of all node data types
 export type WorkflowNodeData =
   | ImageInputNodeData
   | AnnotationNodeData
@@ -261,7 +249,8 @@ export type WorkflowNodeData =
   | OutputNodeData
   | VideoNodeData
   | AICriticNodeData
-  | VariantNodeData;
+  | VariantNodeData
+  | VideoStitchNodeData;
 
 /**
  * Workflow node with typed data (extended with optional groupId)

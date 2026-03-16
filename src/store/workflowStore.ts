@@ -31,6 +31,7 @@ import {
   ProviderSettings,
   RecentModel,
 } from "@/types";
+import { Avatar } from "@/lib/staticAvatars";
 import { useToast } from "@/components/Toast";
 import { calculateGenerationCost } from "@/utils/costCalculator";
 import { logger } from "@/utils/logger";
@@ -46,6 +47,8 @@ import {
   getRecentModels,
   saveRecentModels,
   MAX_RECENT_MODELS,
+  getUserAvatars,
+  saveUserAvatars,
 } from "./utils/localStorage";
 import {
   createDefaultNodeData,
@@ -134,12 +137,17 @@ interface WorkflowStore {
 
   // Helpers
   getNodeById: (id: string) => WorkflowNode | undefined;
-  getConnectedInputs: (nodeId: string) => { images: string[]; text: string | null; video: string | null; dynamicInputs: Record<string, string> };
+  getConnectedInputs: (nodeId: string) => {
+    images: string[];
+    text: string | null;
+    video: string | null;
+    dynamicInputs: Record<string, string>
+  };
   validateWorkflow: () => { valid: boolean; errors: string[] };
 
   // Global Image History
   globalImageHistory: ImageHistoryItem[];
-  addToGlobalHistory: (item: Omit<ImageHistoryItem, "id">) => void;
+  addToGlobalHistory: (item: Partial<Pick<ImageHistoryItem, "id">> & Omit<ImageHistoryItem, "id">) => void;
   clearGlobalHistory: () => void;
 
   // Auto-save state
@@ -175,6 +183,31 @@ interface WorkflowStore {
 
   // Recent models actions
   trackModelUsage: (model: { provider: ProviderType; modelId: string; displayName: string }) => void;
+
+  // Provider Settings
+  providerSettings: ProviderSettings;
+  updateProviderSettings: (settings: ProviderSettings) => void;
+  updateProviderApiKey: (providerId: ProviderType, apiKey: string | null) => void;
+  toggleProvider: (providerId: ProviderType, enabled: boolean) => void;
+
+  // Model Search
+  modelSearchOpen: boolean;
+  modelSearchProvider: ProviderType | null;
+  setModelSearchOpen: (open: boolean, provider?: ProviderType | null) => void;
+  recentModels: RecentModel[];
+
+  // Avatar Browser
+  avatarBrowserOpen: boolean;
+  setAvatarBrowserOpen: (open: boolean) => void;
+  audioBrowserOpen: boolean;
+  setAudioBrowserOpen: (open: boolean) => void;
+  userAvatars: Avatar[];
+  addUserAvatar: (avatar: Avatar) => void;
+  removeUserAvatar: (id: string) => void;
+  syncUserAvatars: () => Promise<void>;
+
+  /** @deprecated Use providerSettings instead */
+  apiKey: string | null;
 }
 
 let nodeIdCounter = 0;
@@ -203,7 +236,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   workflowId: null,
   workflowName: null,
   saveDirectoryPath: null,
-  generationsPath: null,
+  generationsPath: "public/outputs",
   lastSavedAt: null,
   hasUnsavedChanges: false,
   autoSaveEnabled: true,
@@ -220,8 +253,18 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   modelSearchOpen: false,
   modelSearchProvider: null,
 
+  // Avatar browser initial state
+  avatarBrowserOpen: false,
+  setAvatarBrowserOpen: (open) => set({ avatarBrowserOpen: open }),
+  audioBrowserOpen: false,
+  setAudioBrowserOpen: (open) => set({ audioBrowserOpen: open }),
+  userAvatars: getUserAvatars(),
+
   // Recent models initial state
   recentModels: getRecentModels(),
+
+  // Deprecated
+  apiKey: null,
 
   setEdgeStyle: (style: EdgeStyle) => {
     set({ edgeStyle: style });
@@ -649,6 +692,14 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       } else if (sourceNode.type === "video") {
         // User's custom VideoNode
         return { type: "video", value: (sourceNode.data as VideoNodeData).outputVideo };
+      } else if (sourceNode.type === "videoStitch") {
+        // Return stitched video
+        return { type: "video", value: (sourceNode.data as any).outputVideo };
+      } else if (sourceNode.type === "aiCritic") {
+        // Critic might pass judgment or pass through video/image?
+        // For now, let's assume it passes status, but maybe it has an output visualization?
+        // Just returning null for now unless specific requirement.
+        return { type: "text", value: (sourceNode.data as AICriticNodeData).reasoning };
       } else if (sourceNode.type === "variant") {
         // User's custom VariantNode - return first image
         const res = (sourceNode.data as VariantNodeData).results;
@@ -683,7 +734,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       // Also populate legacy arrays for backward compatibility
       if (type === "image" && (isImageHandle(handleId) || !handleId)) {
         images.push(value);
-      } else if (type === "text" && isTextHandle(handleId)) {
+      } else if (type === "text" && (isTextHandle(handleId) || !handleId)) {
         text = value; // Only take last text? Upstream behavior.
       } else if (type === "video") {
         video = value;
@@ -713,9 +764,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         const imageConnected = edges.some(
           (e) => e.target === node.id && e.targetHandle === "image"
         );
+        const hasPrompt = !!(node.data as any).prompt?.trim(); // Check for internal prompt
+        const hasReferenceImage = !!(node.data as any).image; // Check for uploaded reference if supported
 
-        if (!textConnected && !imageConnected) {
-          errors.push(`Video node "${node.data.customTitle || node.id}" requires at least an image or text input`);
+        // Valid if: connected to text/image OR has internal prompt
+        if (!textConnected && !imageConnected && !hasPrompt) {
+          errors.push(`Video node "${node.data.customTitle || node.id}" requires a prompt or input connection`);
         }
       });
 
@@ -1414,6 +1468,9 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                 } catch {
                   if (errorText) errorMessage += ` - ${errorText.substring(0, 200)}`;
                 }
+                // DEBUG: Direct console log to bypass logger issues
+                console.error("DEBUG LLM ERROR:", response.status, errorMessage);
+
                 logger.error('api.error', 'LLM API request failed', {
                   nodeId: node.id,
                   status: response.status,
@@ -1589,6 +1646,8 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                   resolution: nodeData.resolution,
                   duration: nodeData.duration,
                   negativePrompt: nodeData.negativePrompt,
+                  firstFrameImage: nodeData.firstFrameImage,
+                  lastFrameImage: nodeData.lastFrameImage,
                 }),
               });
 
@@ -1633,21 +1692,68 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           case "videoStitch": {
             const incomingEdges = edges.filter((e) => e.target === node.id);
             const inputVideos: string[] = [];
+            const handleMap: Record<string, string> = {};
 
-            // Check handles video1, video2, video3, video4
-            [1, 2, 3, 4].forEach((index) => {
-              const handleId = `video${index}`;
-              const edge = incomingEdges.find((e) => e.targetHandle === handleId);
-              if (edge) {
-                const sourceNode = nodes.find((n) => n.id === edge.source);
-                if (sourceNode) {
-                  const data = sourceNode.data as any;
-                  // Support outputVideo (VideoNode/GenerateVideoNode) or video (OutputNode?)
-                  const vid = data.outputVideo || data.video;
-                  if (vid) inputVideos.push(vid);
+            // Collect connected videos by handle
+            incomingEdges.forEach((edge) => {
+              const sourceNode = nodes.find((n) => n.id === edge.source);
+              if (sourceNode) {
+                const data = sourceNode.data as any;
+                const vid = data.outputVideo || data.video;
+
+                if (vid) {
+                  if (edge.targetHandle) {
+                    handleMap[edge.targetHandle] = vid;
+                  } else {
+                    // Fallback for handle-less connections (unlikely but safe)
+                  }
                 }
               }
             });
+
+            // Extract videos in order of handles video1 -> video4
+            [1, 2, 3, 4].forEach((index) => {
+              const h = `video${index}`;
+              if (handleMap[h]) inputVideos.push(handleMap[h]);
+            });
+
+            // Fallback: If we have connected edges but didn't match handles (e.g. handle mismatch), capture all unique videos
+            if (inputVideos.length < 2 && incomingEdges.length >= 2) {
+              console.warn(`[VideoStitch] Strict handle matching found ${inputVideos.length} videos, falling back to lax mode`);
+              const existing = new Set(inputVideos);
+              incomingEdges.forEach((edge) => {
+                const sourceNode = nodes.find((n) => n.id === edge.source);
+                if (sourceNode) {
+                  const data = sourceNode.data as any;
+                  const vid = data.outputVideo || data.video;
+                  if (vid && !existing.has(vid)) {
+                    inputVideos.push(vid);
+                    existing.add(vid);
+                  }
+                }
+              });
+            }
+
+            console.log(`[VideoStitch] Final collected videos: ${inputVideos.length}`);
+
+            // Extract audio input
+            // Incoming edges already filtered by target=node.id
+            const audioEdge = incomingEdges.find(e => e.targetHandle === "audio");
+            let inputAudio: string | null = null;
+            if (audioEdge) {
+              console.log("[VideoStitch] Found connected audio edge:", audioEdge);
+              const sourceNode = nodes.find(n => n.id === audioEdge.source);
+              if (sourceNode) {
+                const data = sourceNode.data as any;
+                // Check for audio field, fallback to generic output if needed
+                inputAudio = data.audio || data.outputAudio || null;
+                console.log("[VideoStitch] Audio data found:", inputAudio ? `Yes (Length: ${inputAudio.length})` : "No");
+              } else {
+                console.warn("[VideoStitch] Audio source node not found for edge:", audioEdge.source);
+              }
+            } else {
+              console.log("[VideoStitch] No audio edge found connected to 'audio' handle.");
+            }
 
             if (inputVideos.length < 2) {
               updateNodeData(node.id, {
@@ -1662,13 +1768,17 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
               status: "loading",
               error: null,
               inputVideos,
+              audio: inputAudio,
             });
 
             try {
               const response = await fetch("/api/video/stitch", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ videos: inputVideos }),
+                body: JSON.stringify({
+                  videos: inputVideos,
+                  audio: inputAudio
+                }),
               });
 
               if (!response.ok) {
@@ -1703,21 +1813,25 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           }
 
           case "aiCritic": {
-            const { video, text } = getConnectedInputs(node.id);
+            const { video, text, images } = getConnectedInputs(node.id);
             const nodeData = node.data as AICriticNodeData;
+
+            // Prioritize connected inputs
+            const inputVideo = video || nodeData.inputVideo;
+            const inputImage = images[0] || nodeData.inputImage;
+            const inputPrompt = text || nodeData.inputPrompt;
 
             logger.info('node.execution', 'Executing AI Critic Node', {
               nodeId: node.id,
-              hasVideo: !!video,
-              hasText: !!text,
-              videoLength: video ? video.length : 0
+              hasVideo: !!inputVideo,
+              hasImage: !!inputImage,
+              hasText: !!inputPrompt,
             });
 
-            // Only require video, prompt is optional but recommended
-            if (!video) {
+            if (!inputVideo && !inputImage) {
               updateNodeData(node.id, {
                 status: "error",
-                error: "Missing input video",
+                error: "Missing input (video or image)",
               });
               set({ isRunning: false, currentNodeId: null });
               return;
@@ -1726,8 +1840,9 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             updateNodeData(node.id, {
               status: "loading",
               error: null,
-              inputVideo: video,
-              inputPrompt: text,
+              inputVideo: inputVideo,
+              inputImage: inputImage,
+              inputPrompt: inputPrompt,
             });
 
             try {
@@ -1739,8 +1854,9 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                   ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
                 },
                 body: JSON.stringify({
-                  video,
-                  inputPrompt: text || nodeData.inputPrompt,
+                  video: inputVideo,
+                  image: inputImage,
+                  inputPrompt: inputPrompt,
                   criteria: nodeData.criteria,
                 }),
               });
@@ -2126,8 +2242,41 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           const timestamp = Date.now();
           const imageId = `${timestamp}`;
 
+          // Auto-save to generations folder if configured
+          // We do this BEFORE adding to history so we can use the correct filename/ID
+          const genPath = get().generationsPath;
+          let savedImageId: string | null = null;
+
+          if (genPath) {
+            try {
+              const saveResponse = await fetch("/api/save-generation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  directoryPath: genPath,
+                  image: result.image,
+                  prompt: text,
+                  imageId, // Pass timestamp as hint, though API currently ignores it for filenames
+                }),
+              });
+
+              if (saveResponse.ok) {
+                const saveData = await saveResponse.json();
+                if (saveData.success && saveData.imageId) {
+                  savedImageId = saveData.imageId;
+                }
+              }
+            } catch (err) {
+              console.error("Failed to save generation:", err);
+            }
+          }
+
+          // Use the file-based ID if saved successfully, otherwise fallback to timestamp
+          const finalImageId = savedImageId || imageId;
+
           // Save the newly generated image to global history
           get().addToGlobalHistory({
+            id: finalImageId, // Ensure global history uses the same ID
             image: result.image,
             timestamp,
             prompt: text,
@@ -2137,7 +2286,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
           // Add to node's carousel history
           const newHistoryItem = {
-            id: imageId,
+            id: finalImageId,
             timestamp,
             prompt: text,
             aspectRatio: nodeData.aspectRatio,
@@ -2156,23 +2305,6 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           // Track cost
           const generationCost = calculateGenerationCost(nodeData.model, nodeData.resolution);
           get().addIncurredCost(generationCost);
-
-          // Auto-save to generations folder if configured
-          const genPath = get().generationsPath;
-          if (genPath) {
-            fetch("/api/save-generation", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                directoryPath: genPath,
-                image: result.image,
-                prompt: text,
-                imageId,
-              }),
-            }).catch((err) => {
-              console.error("Failed to save generation:", err);
-            });
-          }
         } else {
           updateNodeData(nodeId, {
             status: "error",
@@ -2206,6 +2338,53 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
         try {
           const { apiKey } = get();
+
+          // Helper to resize image if too large (client-side)
+          const resizeImageIfNeeded = async (dataUrl: string): Promise<string> => {
+            // Check if string is huge (approx > 1MB)
+            if (dataUrl.length > 1.5 * 1024 * 1024) {
+              return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                  const canvas = document.createElement('canvas');
+                  let width = img.width;
+                  let height = img.height;
+
+                  // Max dimension 1280 (Veo supports up to 1080p usually, but reference can be smaller)
+                  const MAX_SIZE = 1280;
+                  if (width > MAX_SIZE || height > MAX_SIZE) {
+                    if (width > height) {
+                      height = Math.round(height * (MAX_SIZE / width));
+                      width = MAX_SIZE;
+                    } else {
+                      width = Math.round(width * (MAX_SIZE / height));
+                      height = MAX_SIZE;
+                    }
+                  } else {
+                    // If size is fine dimensions-wise but bytes are huge (uncompressed?), convert to JPEG
+                  }
+
+                  canvas.width = width;
+                  canvas.height = height;
+                  const ctx = canvas.getContext('2d');
+                  if (ctx) {
+                    ctx.drawImage(img, 0, 0, width, height);
+                    // Compress to JPEG 80%
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                  } else {
+                    resolve(dataUrl); // Fallback
+                  }
+                };
+                img.onerror = () => resolve(dataUrl); // Fallback
+                img.src = dataUrl;
+              });
+            }
+            return dataUrl;
+          };
+
+          // Resize all input images
+          const resizedImages = await Promise.all(images.map(img => resizeImageIfNeeded(img)));
+
           const response = await fetch("/api/video", {
             method: "POST",
             headers: {
@@ -2214,13 +2393,15 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             },
             body: JSON.stringify({
               prompt: text,
-              images: images,
+              images: resizedImages,
               video: video,
               model: nodeData.model,
               aspectRatio: nodeData.aspectRatio,
               resolution: nodeData.resolution,
               duration: nodeData.duration,
               negativePrompt: nodeData.negativePrompt,
+              firstFrameImage: nodeData.firstFrameImage,
+              lastFrameImage: nodeData.lastFrameImage,
             }),
           });
 
@@ -2229,9 +2410,15 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             let errorMessage = `HTTP ${response.status}`;
             try {
               const errorJson = JSON.parse(errorText);
-              errorMessage = errorJson.error || errorMessage;
+              if (errorJson.error) {
+                errorMessage = typeof errorJson.error === 'object'
+                  ? JSON.stringify(errorJson.error)
+                  : String(errorJson.error);
+              } else {
+                errorMessage = errorText;
+              }
             } catch {
-              if (errorText) errorMessage += ` - ${errorText.substring(0, 200)}`;
+              if (errorText) errorMessage += ` - ${errorText.substring(0, 500)}`;
             }
             throw new Error(errorMessage);
           }
@@ -2247,12 +2434,21 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             throw new Error(result.error || "Video generation failed");
           }
         } catch (error) {
+          const errorObj = error instanceof Error ? error : new Error(String(error));
+          const simplifiedMessage = errorObj.message.length > 500
+            ? errorObj.message.substring(0, 500) + '... (truncated)'
+            : errorObj.message;
+
+          // Direct console log to ensure visibility
+          console.error("Video Generation Failed (Raw):", errorObj.message.substring(0, 1000));
+
           logger.error('node.error', 'video node regeneration failed', {
             nodeId,
-          }, error instanceof Error ? error : undefined);
+            error: simplifiedMessage
+          });
           updateNodeData(nodeId, {
             status: "error",
-            error: error instanceof Error ? error.message : "Video generation failed",
+            error: simplifiedMessage,
           });
           set({ isRunning: false, currentNodeId: null });
           await logger.endSession();
@@ -2292,16 +2488,26 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
-        if (nodeData.provider === "google") {
-          const geminiConfig = providerSettingsState.providers.gemini;
-          if (geminiConfig?.apiKey) {
-            headers["X-Gemini-API-Key"] = geminiConfig.apiKey;
-          }
-        } else if (nodeData.provider === "openai") {
-          const openaiConfig = providerSettingsState.providers.openai;
-          if (openaiConfig?.apiKey) {
-            headers["X-OpenAI-API-Key"] = openaiConfig.apiKey;
-          }
+        if (nodeData.provider === "openai") {
+          // Auto-migrate deprecated OpenAI provider to Google
+          // Update the node data locally so it persists
+          const updatedProvider = "google";
+          const updatedModel = "gemini-3-flash-preview";
+
+          // We can't easily call get().updateNodeData here without circular dependency or complexity? 
+          // Actually we can, we are in the store actions.
+          get().updateNodeData(nodeId, { provider: updatedProvider, model: updatedModel });
+
+          // Use the new values for this execution
+          nodeData.provider = updatedProvider;
+          nodeData.model = updatedModel;
+          nodeData.model = updatedModel;
+        }
+
+        // Always use Google logic now
+        const geminiConfig = providerSettingsState.providers.gemini;
+        if (geminiConfig?.apiKey) {
+          headers["X-Gemini-API-Key"] = geminiConfig.apiKey;
         }
 
         logger.info('api.llm', 'Calling LLM API for node regeneration', {
@@ -2658,17 +2864,18 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         const sourceImage = inputs.images[0] || nodeData.inputImage;
         const sourcePrompt = inputs.text || nodeData.inputPrompt;
 
-        if (!sourcePrompt) {
-          updateNodeData(nodeId, { status: "error", error: "Missing Prompt" });
-          set({ isRunning: false, currentNodeId: null });
-          await logger.endSession();
-          return;
-        }
+        // Prompt is optional if modifiers are used
+        // if (!sourcePrompt) {
+        //   updateNodeData(nodeId, { status: "error", error: "Missing Prompt" });
+        //   set({ isRunning: false, currentNodeId: null });
+        //   return;
+        // }
 
         const model = "nano-banana-pro";
 
         // Check mode
         const isStyleMode = nodeData.variantMode === "style";
+        const isReframeMode = nodeData.variantMode === "reframe";
         let combos: { label: string; promptModifier: string }[] = [];
 
         if (isStyleMode) {
@@ -2676,6 +2883,34 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           combos = styles.map(style => ({
             label: style,
             promptModifier: style ? `in the style of ${style}` : ""
+          }));
+        } else if (isReframeMode) {
+          const perspectives = nodeData.perspectives && nodeData.perspectives.length > 0 ? nodeData.perspectives : [""];
+
+          const PERSPECTIVE_PROMPTS: Record<string, string> = {
+            "Extr. long shot": "Extreme long shot. Zoom out as far as possible to show the vast environment. Tiny subject.",
+            "Long shot": "Long shot. Full body visibility with ample background context. Distant view.",
+            "Closeup": "Closeup shot. Focus tightly on the face or main subject details. Blur background.",
+            "Medium long": "Medium long shot. Knee-up framing. Balanced subject and background.",
+            "Extreme closeup": "Extreme macro closeup. Focus on a specific detail (e.g. eyes, texture). Abstract view.",
+            "Low angle": "Low angle shot from the ground looking up. Worm's-eye view. Imposting stature.",
+            "Back view": "View from behind. Subject facing away from camera. Mystery perspective.",
+            "Med. closeup": "Medium closeup. Head and shoulders framing. Intimate portrait style.",
+            "High angle": "High angle shot from above looking down. Bird's-eye view. Subject looks smaller.",
+            "OTS": "Over-the-shoulder shot. Looking past a foreground subject at the main subject.",
+            "Wide": "Wide angle shot. Use a wide lens (e.g. 24mm). Expand the field of view significantly.",
+            "POV": "First-person point of view. Seeing through the eyes of a character. Immersive.",
+            "Aerial": "Aerial drone shot. High altitude view looking straight down. Map-like perspective.",
+            "Eye level": "Eye level shot. Neutral perspective. Direct connection with subject.",
+            "Profile": "Side profile view. Subject facing purely left or right. Silhouette potential.",
+            "3/4 view": "3/4 angle view. Turned slightly away from camera. Dynamic portrait angle."
+          };
+
+          combos = perspectives.map(perspective => ({
+            label: perspective,
+            promptModifier: perspective
+              ? `${PERSPECTIVE_PROMPTS[perspective] || `Reframe as ${perspective}`}. CHANGE THE CAMERA ANGLE AND COMPOSITION.`
+              : ""
           }));
         } else {
           // Demographics mode
@@ -2734,7 +2969,16 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                 basePrompt = `${gridInstruction}, ${basePrompt}`;
               }
 
-              console.log(`[Workflow] Batch ${i + 1}: Prompt: ${basePrompt}`);
+              // Construct prompt
+              let promptParts: string[] = [];
+              if (combo.promptModifier) promptParts.push(combo.promptModifier);
+              if (gridInstruction) promptParts.push(gridInstruction);
+              if (sourcePrompt) promptParts.push(sourcePrompt);
+
+              // Fallback if everything is empty
+              const finalPrompt = promptParts.length > 0 ? promptParts.join(", ") : "Generate variation";
+
+              console.log(`[Workflow] Batch ${i + 1}: Prompt: ${finalPrompt}`);
 
               const response = await fetch("/api/generate", {
                 method: "POST",
@@ -2743,11 +2987,10 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                   ...(apiKey ? { "x-gemini-api-key": apiKey } : {}),
                 },
                 body: JSON.stringify({
-                  prompt: basePrompt,
+                  prompt: finalPrompt,
                   images: sourceImage ? [sourceImage] : [],
                   model: model,
                   aspectRatio: nodeData.ratio,
-                  resolution: "1K",
                   numberOfImages: 1, // Always 1 image file per loop
                 })
               });
@@ -2790,14 +3033,16 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       } else if (node.type === "aiCritic") {
         const nodeData = node.data as AICriticNodeData;
         const inputs = getConnectedInputs(nodeId);
-        // Prioritize connected video, then internal state
+
+        // Prioritize connected inputs
         const video = inputs.video || nodeData.inputVideo;
+        const image = inputs.images[0] || nodeData.inputImage;
         const text = inputs.text || nodeData.inputPrompt;
 
-        if (!video) {
+        if (!video && !image) {
           updateNodeData(nodeId, {
             status: "error",
-            error: "Missing input video",
+            error: "Missing input (video or image)",
           });
           set({ isRunning: false, currentNodeId: null });
           return;
@@ -2807,6 +3052,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           status: "loading",
           error: null,
           inputVideo: video,
+          inputImage: image,
           inputPrompt: text,
         });
 
@@ -2820,6 +3066,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
             },
             body: JSON.stringify({
               video,
+              image,
               inputPrompt: text,
               criteria: nodeData.criteria,
             }),
@@ -2842,6 +3089,120 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           updateNodeData(nodeId, {
             status: "error",
             error: error instanceof Error ? error.message : "Critique failed",
+          });
+        }
+        set({ isRunning: false, currentNodeId: null });
+        await logger.endSession();
+      } else if (node.type === "videoStitch") {
+        const { nodes, edges } = get();
+        const incomingEdges = edges.filter((e) => e.target === nodeId);
+        const inputVideos: string[] = [];
+        const handleMap: Record<string, string> = {};
+
+        // Collect connected videos by handle
+        incomingEdges.forEach((edge) => {
+          const sourceNode = nodes.find((n) => n.id === edge.source);
+          if (sourceNode) {
+            const data = sourceNode.data as any;
+            const vid = data.outputVideo || data.video;
+
+            if (vid) {
+              if (edge.targetHandle) {
+                handleMap[edge.targetHandle] = vid;
+              }
+            }
+          }
+        });
+
+        // Extract videos in order of handles
+        [1, 2, 3, 4].forEach((index) => {
+          const h = `video${index}`;
+          if (handleMap[h]) inputVideos.push(handleMap[h]);
+        });
+
+        // Fallback lax mode if needed
+        if (inputVideos.length < 2 && incomingEdges.length >= 2) {
+          const existing = new Set(inputVideos);
+          incomingEdges.forEach((edge) => {
+            const sourceNode = nodes.find((n) => n.id === edge.source);
+            if (sourceNode) {
+              const data = sourceNode.data as any;
+              const vid = data.outputVideo || data.video;
+              if (vid && !existing.has(vid)) {
+                inputVideos.push(vid);
+                existing.add(vid);
+              }
+            }
+          });
+        }
+
+        // Extract audio input
+        const audioEdge = incomingEdges.find(e => e.targetHandle === "audio");
+        let inputAudio: string | null = null;
+        if (audioEdge) {
+          const sourceNode = nodes.find(n => n.id === audioEdge.source);
+          if (sourceNode) {
+            const data = sourceNode.data as any;
+            inputAudio = data.audio || data.outputAudio || null;
+          }
+        }
+
+        if (inputVideos.length < 2) {
+          const debugInfo = incomingEdges.map(e => {
+            const src = nodes.find(n => n.id === e.source);
+            const data = src?.data as any;
+            const hasVid = !!(data?.outputVideo || data?.video);
+            return `${e.targetHandle || 'null'}:${hasVid ? 'Y' : 'N'}`;
+          }).join(', ');
+
+          updateNodeData(nodeId, {
+            status: "error",
+            error: `Need 2+ videos. Found ${inputVideos.length}. Edges: ${incomingEdges.length} [${debugInfo}]`,
+          });
+          set({ isRunning: false, currentNodeId: null });
+          return;
+        }
+
+        updateNodeData(nodeId, {
+          status: "loading",
+          error: null,
+          inputVideos,
+          audio: inputAudio,
+        });
+
+        try {
+          const response = await fetch("/api/video/stitch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              videos: inputVideos,
+              audio: inputAudio
+            }),
+          });
+
+          if (!response.ok) {
+            const text = await response.text();
+            let msg = text;
+            try {
+              msg = JSON.parse(text).error || text;
+            } catch { }
+            throw new Error(msg);
+          }
+
+          const result = await response.json();
+          if (result.success && result.video) {
+            updateNodeData(nodeId, {
+              status: "complete",
+              outputVideo: result.video,
+              error: null,
+            });
+          } else {
+            throw new Error(result.error || "Stitching failed");
+          }
+        } catch (error) {
+          updateNodeData(nodeId, {
+            status: "error",
+            error: error instanceof Error ? error.message : "Stitching failed",
           });
         }
         set({ isRunning: false, currentNodeId: null });
@@ -2994,7 +3355,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       workflowId: workflow.id || null,
       workflowName: workflow.name,
       saveDirectoryPath: directoryPath || null,
-      generationsPath: savedConfig?.generationsPath || null,
+      generationsPath: savedConfig?.generationsPath || "public/outputs",
       lastSavedAt: savedConfig?.lastSavedAt || null,
       hasUnsavedChanges: false,
       // Restore cost data
@@ -3013,7 +3374,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       workflowId: null,
       workflowName: null,
       saveDirectoryPath: null,
-      generationsPath: null,
+      generationsPath: "public/outputs",
       lastSavedAt: null,
       hasUnsavedChanges: false,
       // Reset cost tracking
@@ -3251,6 +3612,50 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     });
   },
 
+
+
+  addUserAvatar: (avatar: Avatar) => {
+    const current = get().userAvatars;
+    const updated = [...current, avatar];
+    set({ userAvatars: updated });
+    saveUserAvatars(updated);
+  },
+
+  removeUserAvatar: (id: string) => {
+    const current = get().userAvatars;
+    const updated = current.filter((a) => a.id !== id);
+    set({ userAvatars: updated });
+    saveUserAvatars(updated);
+  },
+
+  syncUserAvatars: async () => {
+    try {
+      const response = await fetch("/api/avatar/list");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.avatars)) {
+          const serverAvatars = data.avatars as Avatar[];
+          const localAvatars = get().userAvatars;
+
+          // Merge: prefer server avatars (metadata might differ?), 
+          // but actually we want to Union them by ID.
+          // Since IDs are unique (timestamp+uuid), collisions are unlikely.
+          // We filter out duplicates.
+          const seenIds = new Set(localAvatars.map(a => a.id));
+          const newAvatars = serverAvatars.filter(a => !seenIds.has(a.id));
+
+          if (newAvatars.length > 0) {
+            const updated = [...localAvatars, ...newAvatars];
+            set({ userAvatars: updated });
+            saveUserAvatars(updated);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync user avatars", e);
+    }
+  },
+
   trackModelUsage: (model: { provider: ProviderType; modelId: string; displayName: string }) => {
     const current = get().recentModels;
     // Remove existing entry for same modelId if present
@@ -3270,3 +3675,4 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({ recentModels: updated });
   },
 }));
+if (typeof window !== "undefined") { (window as any).workflowStore = useWorkflowStore; }

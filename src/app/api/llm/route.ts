@@ -5,6 +5,14 @@ import { logger } from "@/utils/logger";
 
 export const maxDuration = 60; // 1 minute timeout
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 // Generate a unique request ID for tracking
 function generateRequestId(): string {
   return `llm-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -21,6 +29,49 @@ const OPENAI_MODEL_MAP: Record<string, string> = {
   "gpt-4.1-mini": "gpt-4.1-mini",
   "gpt-4.1-nano": "gpt-4.1-nano",
 };
+
+import fs from 'fs';
+import path from 'path';
+
+// Helper to resolve image to base64
+async function fetchImageAsBase64(imageUrl: string): Promise<{ mimeType: string; data: string } | null> {
+  try {
+    // 1. Handle Data URLs
+    const dataMatch = imageUrl.match(/^data:(.+?);base64,(.+)$/);
+    if (dataMatch) {
+      return { mimeType: dataMatch[1], data: dataMatch[2] };
+    }
+
+    // 2. Handle Local Files (starting with /)
+    if (imageUrl.startsWith('/')) {
+      // Prevent path traversal - strict public check
+      const normalizedPath = path.normalize(imageUrl).replace(/^(\.\.(\/|\\|$))+/, '');
+      const publicPath = path.join(process.cwd(), 'public', normalizedPath);
+
+      if (fs.existsSync(publicPath)) {
+        const buffer = await fs.promises.readFile(publicPath);
+        const ext = path.extname(imageUrl).toLowerCase().replace('.', '');
+        const mimeType = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'webp' ? 'image/webp' : 'application/octet-stream';
+        return { mimeType, data: buffer.toString('base64') };
+      }
+    }
+
+    // 3. Handle Remote URLs
+    if (imageUrl.startsWith('http')) {
+      const res = await fetch(imageUrl);
+      if (!res.ok) return null;
+      const arrayBuffer = await res.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const mimeType = res.headers.get('content-type') || 'image/png';
+      return { mimeType, data: buffer.toString('base64') };
+    }
+
+    return null;
+  } catch (error) {
+    logger.error('api.error', 'Failed to fetch image for LLM', { imageUrl }, error instanceof Error ? error : undefined);
+    return null;
+  }
+}
 
 async function generateWithGoogle(
   prompt: string,
@@ -53,26 +104,16 @@ async function generateWithGoogle(
   // Build multimodal content if images are provided
   let contents: string | Array<{ inlineData: { mimeType: string; data: string } } | { text: string }>;
   if (images && images.length > 0) {
+    const processedImages = await Promise.all(images.map(async (img) => {
+      const base64Data = await fetchImageAsBase64(img);
+      return base64Data ? { inlineData: base64Data } : null;
+    }));
+
+    // Filter out nulls
+    const validImages = processedImages.filter((img): img is { inlineData: { mimeType: string; data: string } } => img !== null);
+
     contents = [
-      ...images.map((img) => {
-        // Extract base64 data and mime type from data URL
-        const matches = img.match(/^data:(.+?);base64,(.+)$/);
-        if (matches) {
-          return {
-            inlineData: {
-              mimeType: matches[1],
-              data: matches[2],
-            },
-          };
-        }
-        // Fallback: assume PNG if no data URL prefix
-        return {
-          inlineData: {
-            mimeType: "image/png",
-            data: img,
-          },
-        };
-      }),
+      ...validImages,
       { text: prompt },
     ];
   } else {
@@ -205,7 +246,7 @@ export async function POST(request: NextRequest) {
       provider,
       model,
       temperature = 0.7,
-      maxTokens = 1024,
+      maxTokens = 8192,
       enhancementType // New optional field
     } = body;
 
@@ -353,6 +394,180 @@ Your goal: A comprehensive, artistically rich, and technically precise prompt th
 Output ONLY the enhanced prompt.
 
 Original Prompt: "${prompt}"`;
+    } else if (enhancementType === "character") {
+      finalPrompt = `You are an expert Prompt Engineer specializing in Character Consistency and Photorealism.
+
+**GOAL**: Refine the user's prompt to ensure the generated character is consistent with the provided REFERENCE IMAGE (if any) and maintains high fidelity.
+
+**CRITICAL SYSTEM INSTRUCTIONS**:
+1.  **Identity & Fidelity**: Keep the original person’s face unchanged and realistic. Preserve skin texture and pores. Maintain natural proportions and face geometry. Do not alter the background or camera angle unless specified in the prompt.
+2.  **Eyes Refinement**: Sharpen the eyes with natural catchlights. Keep iris color hazel (or match the reference image). Avoid over-whitening the sclera. Do not add makeup or change eyelid shape unless specified.
+3.  **Glasses Scenario (Conditional)**: Analyze the reference image. IF the subject wears glasses, ensure they are rendered as thin, semi-matte rectangular eyeglasses with subtle, realistic reflections (avoid glare covering pupils). IF NO glasses are present in the reference, DO NOT add them.
+4.  **Hands Correction**: Show relaxed hands with five fingers per hand, natural joint bends, and no overlaps hiding fingers. Avoid extra or fused fingers.
+5.  **Anti-softness**: Increase micro-contrast and fine detail on skin, hair, and fabric while avoiding plastic smoothing and sharpening halos.
+
+**Task**:
+Rewrite the user's prompt to incorporate these constraints naturally. Ensure the subject description aligns with the reference image (if provided).
+Output ONLY the enhanced prompt.
+
+Original Prompt: "${prompt}"`;
+    } else if (enhancementType === "avatar") {
+      finalPrompt = `You are an expert Avatar Photographer and Art Director. Enhance the following user prompt to create a highly detailed, photorealistic lifestyle portrait description.
+
+**CRITICAL INSTRUCTION: IMAGE ANALYSIS**
+If an image is provided with this request, you MUST analyze it deeply. Extract and describe:
+1.  **Physical Appearance**: Hair color/style, eye shape, facial features, skin tone.
+2.  **Clothing & Accessories**: Detailed description of what they are wearing.
+3.  **Pose & Expression**: Exact posture, head angle, hand placement, and facial expression.
+4.  **Style & Vibe**: The aesthetic (e.g., candid, studio, vintage) to match.
+Integrate these extracted details into the enhanced prompt to ensure the generated avatar looks like the reference.
+
+Style Guideline & Example (Use this level of detail, tone, and structure):
+"Create a photorealistic, realistic lifestyle portrait photograph... [rest of example omitted for brevity, stick to the previous style guide]"
+
+Your goal: Combine the specific visual details from the REFERENCE IMAGE (if provided) with the user's text description, applied to the "organic candid social-media aesthetic".
+Output ONLY the enhanced prompt.
+
+Original Prompt: "${prompt}"`;
+    } else if (enhancementType === "hair") {
+      finalPrompt = `You are an expert Hair Stylist and Creative Director. Enhance the following user prompt to create a specific "Hair Style Collage" request.
+
+**TEMPLATE TO FOLLOW**:
+"A high-quality photo collage featuring the same person with identical facial features and expression, shown in multiple frames with different hairstyles. Each panel displays a unique hairstyle such as long straight hair, high ponytail, messy bun, pixie cut, braided crown, soft waves, short bob with bangs, low bun, side braid, and loose curls. Consistent neutral outfit and makeup across all images, soft studio lighting, warm blurred background, realistic skin texture, symmetrical face consistency, ultra-detailed, editorial beauty look, 4x3 grid layout, professional portrait photograph."
+
+**INSTRUCTIONS**:
+1.  Integrate the USER'S subject description (e.g., "redhead woman", "man with beard") into the "same person" part of the template.
+2.  If the user specifies specific hairstyles, replace the example hairstyles with theirs.
+3.  Maintain the strict Grid Collage structure and "identical facial features" requirement.
+
+Output ONLY the enhanced prompt.
+
+Original Prompt: "${prompt}"`;
+    } else if (enhancementType === "portrait") {
+      finalPrompt = `You are an expert Portrait Photographer. Enhance the following user prompt to create a specific "High Fidelity Portrait" request.
+
+**CRITICAL INSTRUCTION**:
+Portraits are a core strength. Faces hold structure. Expressions feel natural. Skin tones are accurate.
+
+**GUIDELINES**:
+1.  **Describe**: Age, expression, and features.
+2.  **Lighting**: Include lighting direction (side lit, backlit, soft natural light).
+3.  **Camera**: Add lens info for depth (85mm, shallow depth of field).
+
+**EXAMPLE**:
+"Close up portrait of a young woman with freckles, warm smile, golden hour light from the left, shot on 50mm lens, natural skin texture, photorealistic"
+
+**TEMPLATE TO FOLLOW**:
+"A photorealistic close-up selfie portrait of a [SUBJECT] with [DETAILS]. [HE/SHE] features [FACIAL FEATURES]. [HE/SHE] is wearing [CLOTHING/ACCESSORIES]. The background is [BACKGROUND] with [LIGHTING] illuminating [HIS/HER] face from the [DIRECTION], highlighting skin texture and features."
+
+Your goal: specific, high-resolution, professional portrait descriptions.
+Output ONLY the enhanced prompt.
+
+Original Prompt: "${prompt}"`;
+    } else if (enhancementType === "storyboard") {
+      finalPrompt = `You are an expert Film Director and Storyboard Artist. Enhance the following user prompt to create a comprehensive "Cinematic 3x3 Storyboard" request.
+
+**DIRECTIVE**:
+Generate a raw, cinematic 3x3 storyboard grid (9 panels) simulating film stills, following the user's subject and theme.
+
+**TEMPLATE STRUCTURE (Strictly observe this breakdown)**:
+
+"DIRECTIVE:
+Generate a raw, cinematic 3x3 storyboard grid (9 panels) simulating film stills from [MOVIE GENRE/THEME] movie.
+
+SUBJECTS:
+SUBJECT A: [Main Character/Object description]
+SUBJECT B: [Secondary Character/Object description]
+
+SCENE & ATMOSPHERE:
+Location: [Setting description]
+Lighting: [Lighting style, e.g., neon, tungsten, natural]
+Key Cinematography: [Lens type, film stock, texture details]
+
+PANEL BREAKDOWN (Chronological Flow):
+Panel 1 (Top-Left): [Establishing Shot] [Description]
+Panel 2 (Top-Center): [Tracking Shot] [Description]
+Panel 3 (Top-Right): [Interior/POV] [Description]
+Panel 4 (Mid-Left): [Mid-Shot] [Description]
+Panel 5 (Mid-Center): [Close-Up Detail] [Description]
+Panel 6 (Mid-Right): [Portrait] [Description]
+Panel 7 (Bottom-Left): [Wide Environmental Shot] [Description]
+Panel 8 (Bottom-Center): [Action] [Description]
+Panel 9 (Bottom-Right): [Closing Shot] [Description]
+
+TECHNICAL SPECS:
+Film Stock: [e.g., Kodak Vision3 500T]
+Lenses: [e.g., Anamorphic primes]
+Color Grade: [e.g., Deep cold blues, neon greens]
+Negative Prompt: CGI, 3D render, smooth digital look, illustration, fake ice, studio lighting."
+
+**INSTRUCTIONS**:
+1.  Adapt the "Arctic Expedition" example structure to the USER'S prompt topic.
+2.  If the user's prompt is simple (e.g., "A cybersamurai in tokyo"), invent a compelling 9-panel narrative sequence for it.
+3.  Ensure the "3x3 unique panels" composition is clearly described.
+
+Output ONLY the enhanced prompt.
+
+Original Prompt: "${prompt}"`;
+    } else if (enhancementType === "storyboard_2x2") {
+      finalPrompt = `You are an expert Film Director and Storyboard Artist. Enhance the following user prompt to create a comprehensive "Cinematic 2x2 Storyboard" request.
+
+**TEMPLATE TO FOLLOW**:
+"[Style], a 2x2 storyboard grid showing the sequence of [Scene/Action].
+Frame 1 (Top-Left): [Describe setting and initial action]
+Frame 2 (Top-Right): [Describe second action/interaction]
+Frame 3 (Bottom-Left): [Describe climax or change]
+Frame 4 (Bottom-Right): [Describe resolution or final shot]
+Details: Consistent character design, [Lighting/Mood], solid white borders separating frames, [Color Palette], 4k, high detail."
+
+**CONCRETE EXAMPLES**:
+*   *Action/Narrative*: "A 2x2 storyboard grid showing a bank heist scene. Frame 1: Cinematic wide shot of a robber in a suit approaching the bank. Frame 2: Close-up of hands cracking a safe. Frame 3: Medium shot of alarms flashing. Frame 4: Wide shot of the getaway car driving away. Style: Neo-noir, dramatic lighting, high contrast, sketch and watercolor, solid black borders."
+*   *Character/Animation*: "A 2x2 comic-style storyboard grid showing a cat trying to catch a fish. Frame 1: Cat looking at a fishbowl. Frame 2: Cat jumping. Frame 3: Cat falling into the water. Frame 4: Wet cat looking grumpy. Style: Pixar 3D style, vibrant colors, clean white borders, consistent character design."
+
+**KEY ELEMENTS**:
+1.  **Layout**: "2x2 grid" or "four-frame storyboard".
+2.  **Consistency**: Explicitly mention "consistent character design" or "identical background".
+3.  **Separation**: "Solid white borders" or "black borders" to define the structure.
+
+Your goal: specific, high-resolution, professional 4-panel storyboard descriptions.
+Output ONLY the enhanced prompt.
+
+Original Prompt: "${prompt}"`;
+    } else if (enhancementType === "image_to_storyboard") {
+      finalPrompt = `You are an expert Film Director and Storyboard Artist. Enhance the following user prompt (or simply use the provided image as source) to create a comprehensive "Cinematic Contact Sheet" request.
+
+**INSTRUCTION**:
+Analyze the entire composition of the input image. Identify ALL key subjects present (whether it's a single person, a group/couple, a vehicle, or a specific object) and their spatial relationship/interaction.
+Generate a cohesive 3x3 grid "Cinematic Contact Sheet" featuring 9 distinct camera shots of exactly these subjects in the same environment.
+You must adapt the standard cinematic shot types to fit the content (e.g., if a group, keep the group together; if an object, frame the whole object):
+
+**Row 1 (Establishing Context):**
+1.  **Extreme Long Shot (ELS):** The subject(s) are seen small within the vast environment.
+2.  **Long Shot (LS):** The complete subject(s) or group is visible from top to bottom (head to toe / wheels to roof).
+3.  **Medium Long Shot (American/3-4):** Framed from knees up (for people) or a 3/4 view (for objects).
+
+**Row 2 (The Core Coverage):**
+4.  **Medium Shot (MS):** Framed from the waist up (or the central core of the object). Focus on interaction/action.
+5.  **Medium Close-Up (MCU):** Framed from chest up. Intimate framing of the main subject(s).
+6.  **Close-Up (CU):** Tight framing on the face(s) or the "front" of the object.
+
+**Row 3 (Details & Angles):**
+7.  **Extreme Close-Up (ECU):** Macro detail focusing intensely on a key feature (eyes, hands, logo, texture).
+8.  **Low Angle Shot (Worm's Eye):** Looking up at the subject(s) from the ground (imposing/heroic).
+9.  **High Angle Shot (Bird's Eye):** Looking down on the subject(s) from above.
+
+Ensure strict consistency: The same people/objects, same clothes, and same lighting across all 9 panels. The depth of field should shift realistically (bokeh in close-ups).
+
+A professional 3x3 cinematic storyboard grid containing 9 panels.
+The grid showcases the specific subjects/scene from the input image in a comprehensive range of focal lengths.
+**Top Row:** Wide environmental shot, Full view, 3/4 cut.
+**Middle Row:** Waist-up view, Chest-up view, Face/Front close-up.
+**Bottom Row:** Macro detail, Low Angle, High Angle.
+All frames feature photorealistic textures, consistent cinematic color grading, and correct framing for the specific number of subjects or objects analyzed. **Technical Specifications:** Photorealistic textures, anamorphic lens flares, consistent warm cinematic color grading, 8k resolution, and realistic shallow depth of field in the close-up panels.  Negative Prompt: CGI, 3D render, smooth digital look, illustration, fake ice, studio lighting, clean car, modern clothes, plastic textures.
+
+**Output ONLY the enhanced prompt.**
+
+Original Prompt (if any): "${prompt}"`;
     }
 
     let text: string;

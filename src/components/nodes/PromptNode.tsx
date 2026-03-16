@@ -18,7 +18,7 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
   const incrementModalCount = useWorkflowStore((state) => state.incrementModalCount);
   const decrementModalCount = useWorkflowStore((state) => state.decrementModalCount);
   const [isModalOpenLocal, setIsModalOpenLocal] = useState(false);
-  const [enhancerType, setEnhancerType] = useState<"image" | "video" | "branding" | "product" | "editing" | "logic" | "content">("image");
+  const [enhancerType, setEnhancerType] = useState<"image" | "video" | "branding" | "product" | "editing" | "logic" | "content" | "character" | "hair" | "portrait" | "storyboard" | "image_to_storyboard" | "storyboard_2x2">("image");
   const [isEnhancing, setIsEnhancing] = useState(false);
 
   const handleChange = useCallback(
@@ -29,7 +29,11 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
   );
 
   const handleEnhance = useCallback(async () => {
-    if (!nodeData.prompt) return;
+    // specific modes allow empty prompt if image is present
+    const isImageMode = enhancerType === "image_to_storyboard" || enhancerType === "character";
+    const hasImage = !!nodeData.referenceImage;
+
+    if (!nodeData.prompt && !(isImageMode && hasImage)) return;
 
     setIsEnhancing(true);
     try {
@@ -37,15 +41,20 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: nodeData.prompt, // Send usage as raw prompt, API will wrap it
-          enhancementType: enhancerType, // Pass valid type
+          prompt: nodeData.prompt || "Analyze this image", // Fallback prompt for API validation
+          enhancementType: enhancerType, 
           provider: "google",
           model: "gemini-3-flash-preview",
-          maxTokens: 1000,
+          maxTokens: 8192,
+          images: (isImageMode && nodeData.referenceImage) ? [nodeData.referenceImage] : [],
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to enhance prompt");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Enhancement processing error:", response.status, response.statusText, errorData);
+        throw new Error(errorData.error || `Enhancement failed: ${response.status} ${response.statusText}`);
+      }
 
       const data = await response.json();
       if (data.success && data.text) {
@@ -93,7 +102,7 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
             <span className="text-[10px] text-neutral-400">Enhance for:</span>
             <select
               value={enhancerType}
-              onChange={(e) => setEnhancerType(e.target.value as "image" | "video" | "branding" | "product" | "editing" | "logic" | "content")}
+              onChange={(e) => setEnhancerType(e.target.value as "image" | "video" | "branding" | "product" | "editing" | "logic" | "content" | "character" | "hair" | "portrait" | "storyboard")}
               className="text-[10px] bg-neutral-800 border border-neutral-700 rounded px-1.5 py-0.5 text-neutral-300 focus:outline-none focus:border-neutral-500"
             >
               <option value="image">Image (Nano Banana)</option>
@@ -101,10 +110,58 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
               <option value="branding">Branding Identity</option>
               <option value="product">Product Photography</option>
               <option value="editing">Photo Editing</option>
-              <option value="logic">Logic Prompt</option>
               <option value="content">Content Creation</option>
+              <option value="logic">Logic & Composition</option>
+              <option value="character">Character Consistency</option>
+              <option value="hair">Hair Style</option>
+              <option value="portrait">Self Portrait</option>
+              <option value="storyboard">Storyboard 3x3</option>
+              <option value="storyboard_2x2">Storyboard 2x2</option>
+              <option value="image_to_storyboard">Image to Storyboard</option>
             </select>
           </div>
+
+          {/* Reference Image Upload (Only for Character Consistency or Image to Storyboard) */}
+          {(enhancerType === "character" || enhancerType === "image_to_storyboard") && (
+            <div className="px-1 mb-2">
+              <label className="flex items-center gap-2 text-[10px] text-neutral-400 cursor-pointer hover:text-neutral-300 transition-colors">
+                <div className="w-5 h-5 flex items-center justify-center border border-dashed border-neutral-600 rounded bg-neutral-800/50">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                </div>
+                <span>{nodeData.referenceImage ? "Change Reference" : "Add Reference Face"}</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        updateNodeData(id, { referenceImage: reader.result as string });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+              {nodeData.referenceImage && (
+                <div className="relative mt-1 w-12 h-12 rounded overflow-hidden group">
+                  <img src={nodeData.referenceImage} alt="Reference" className="w-full h-full object-cover" />
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      updateNodeData(id, { referenceImage: null });
+                    }}
+                    className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <textarea
             value={nodeData.prompt}
             onChange={handleChange}
@@ -113,12 +170,12 @@ export function PromptNode({ id, data, selected }: NodeProps<PromptNodeType>) {
           />
           <button
             onClick={handleEnhance}
-            disabled={isEnhancing || !nodeData.prompt}
+            disabled={isEnhancing || (!nodeData.prompt && !((enhancerType === "image_to_storyboard" || enhancerType === "character") && nodeData.referenceImage))}
             className={`absolute bottom-2 right-2 p-1.5 rounded-md transition-colors ${isEnhancing
               ? "bg-neutral-800 text-neutral-500 cursor-not-allowed"
               : "bg-neutral-800/80 hover:bg-neutral-700 text-yellow-500 hover:text-yellow-400"
               }`}
-            title={`Enhance for ${enhancerType === 'video' ? 'Veo' : enhancerType === 'branding' ? 'Branding' : enhancerType === 'product' ? 'Product' : enhancerType === 'editing' ? 'Photo Editing' : enhancerType === 'logic' ? 'Logic' : enhancerType === 'content' ? 'Content' : 'Image'}`}
+            title={`Enhance for ${enhancerType === 'video' ? 'Veo' : enhancerType === 'branding' ? 'Branding' : enhancerType === 'product' ? 'Product' : enhancerType === 'editing' ? 'Photo Editing' : enhancerType === 'logic' ? 'Logic' : enhancerType === 'content' ? 'Content' : enhancerType === 'character' ? 'Character' : enhancerType === 'hair' ? 'Hair' : enhancerType === 'portrait' ? 'Portrait' : 'Image'}`}
           >
             <svg
               width="12"

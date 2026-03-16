@@ -294,6 +294,8 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
       return null;
     }
 
+    console.log(`[GenerateImageNode] Loading image: ${imageId} from ${generationsPath}`);
+
     try {
       const response = await fetch("/api/load-generation", {
         method: "POST",
@@ -325,6 +327,15 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
     const newIndex = currentIndex === 0 ? history.length - 1 : currentIndex - 1;
     const imageItem = history[newIndex];
 
+    // If image data is already in history (base64) and looks valid, use it directly
+    if (imageItem.image && (imageItem.image.startsWith("data:") || imageItem.image.startsWith("/"))) {
+      updateNodeData(id, {
+        outputImage: imageItem.image,
+        selectedHistoryIndex: newIndex,
+      });
+      return;
+    }
+
     setIsLoadingCarouselImage(true);
     const image = await loadImageById(imageItem.id);
     setIsLoadingCarouselImage(false);
@@ -344,6 +355,15 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
     const currentIndex = nodeData.selectedHistoryIndex || 0;
     const newIndex = (currentIndex + 1) % history.length;
     const imageItem = history[newIndex];
+
+    // If image data is already in history (base64) and looks valid, use it directly
+    if (imageItem.image && (imageItem.image.startsWith("data:") || imageItem.image.startsWith("/"))) {
+      updateNodeData(id, {
+        outputImage: imageItem.image,
+        selectedHistoryIndex: newIndex,
+      });
+      return;
+    }
 
     setIsLoadingCarouselImage(true);
     const image = await loadImageById(imageItem.id);
@@ -835,6 +855,17 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
         {currentProvider === "gemini" && (
           <div className="flex gap-1.5 shrink-0">
             <select
+                value={nodeData.model || "nano-banana-pro"}
+                onChange={handleModelChange}
+                className="flex-1 text-[10px] py-1 px-1.5 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"
+              >
+                {GEMINI_IMAGE_MODELS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              <select
               value={nodeData.aspectRatio}
               onChange={handleAspectRatioChange}
               className="flex-1 text-[10px] py-1 px-1.5 border border-neutral-700 rounded bg-neutral-900/50 focus:outline-none focus:ring-1 focus:ring-neutral-600 text-neutral-300"

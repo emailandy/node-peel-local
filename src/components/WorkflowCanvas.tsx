@@ -28,6 +28,9 @@ import {
   OutputNode,
   AICriticNode,
   VariantNode,
+  VideoStitchNode,
+  GenerateVideoNode,
+  AudioNode,
 } from "./nodes";
 import { EditableEdge, ReferenceEdge } from "./edges";
 import { ConnectionDropMenu, MenuAction } from "./ConnectionDropMenu";
@@ -51,6 +54,9 @@ const nodeTypes: NodeTypes = {
   output: OutputNode,
   aiCritic: AICriticNode,
   variant: VariantNode,
+  videoStitch: VideoStitchNode,
+  generateVideo: GenerateVideoNode,
+  audio: AudioNode,
 };
 
 // ... (imports)
@@ -116,6 +122,12 @@ const getNodeHandles = (nodeType: string): { inputs: string[]; outputs: string[]
       return { inputs: ["video", "text"], outputs: ["video"] };
     case "variant":
       return { inputs: ["image", "text"], outputs: ["image"] };
+    case "videoStitch":
+      return { inputs: ["video"], outputs: ["video"] };
+    case "generateVideo":
+      return { inputs: ["text", "image", "video"], outputs: ["video"] };
+    case "audio":
+      return { inputs: [], outputs: ["audio"] };
     default:
       return { inputs: [], outputs: [] };
   }
@@ -752,6 +764,9 @@ export function WorkflowCanvas() {
             output: { width: 320, height: 320 },
             aiCritic: { width: 280, height: 300 },
             variant: { width: 300, height: 400 },
+            videoStitch: { width: 300, height: 400 },
+            generateVideo: { width: 320, height: 400 },
+            audio: { width: 300, height: 280 },
           };
           const dims = defaultDimensions[nodeType];
           addNode(nodeType, { x: centerX - dims.width / 2, y: centerY - dims.height / 2 });

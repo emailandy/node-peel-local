@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         directoryPath,
       });
       return NextResponse.json(
-        { success: false, error: "File not found" },
+        { success: false, error: `File not found. Searched for ID: ${imageId} in ${directoryPath}` },
         { status: 404 }
       );
     }

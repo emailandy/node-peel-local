@@ -114,6 +114,25 @@ const STYLES = [
   "Photorealistic",
 ];
 
+const PERSPECTIVES = [
+  "Extr. long shot",
+  "Long shot",
+  "Closeup",
+  "Medium long",
+  "Extreme closeup",
+  "Low angle",
+  "Back view",
+  "Med. closeup",
+  "High angle",
+  "OTS",
+  "Wide",
+  "POV",
+  "Aerial",
+  "Eye level",
+  "Profile",
+  "3/4 view",
+];
+
 export function VariantNode({ id, data, selected }: NodeProps<VariantNodeType>) {
   const nodeData = data;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
@@ -148,7 +167,7 @@ export function VariantNode({ id, data, selected }: NodeProps<VariantNodeType>) 
       className="min-w-[300px]"
       isExecuting={nodeData.status === "loading"}
     >
-      <div className="flex flex-col gap-3 p-1 relative">
+      <div className="flex flex-col gap-3 p-1">
 
         {/* Handles */}
         <div className="absolute -left-3 top-20 flex flex-col gap-8 z-10">
@@ -159,7 +178,17 @@ export function VariantNode({ id, data, selected }: NodeProps<VariantNodeType>) 
               id="image"
               className="w-3 h-3 bg-green-500 hover:bg-green-400 transition-colors"
             />
-            <span className="absolute right-4 top-0 text-[9px] text-neutral-400 pointer-events-none bg-neutral-900/80 px-1 rounded shadow-sm">Img</span>
+            {/* Image Label */}
+            <div
+              className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+              style={{
+                right: `calc(100% + 8px)`,
+                top: "calc(50% - 7px)",
+                color: "var(--handle-color-image)",
+              }}
+            >
+              Image
+            </div>
           </div>
           <div className="relative">
             <Handle
@@ -168,7 +197,17 @@ export function VariantNode({ id, data, selected }: NodeProps<VariantNodeType>) 
               id="text"
               className="w-3 h-3 bg-purple-500 hover:bg-purple-400 transition-colors"
             />
-            <span className="absolute right-4 top-0 text-[9px] text-neutral-400 pointer-events-none bg-neutral-900/80 px-1 rounded shadow-sm">Txt</span>
+            {/* Prompt Label */}
+            <div
+              className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-right"
+              style={{
+                right: `calc(100% + 8px)`,
+                top: "calc(50% - 7px)",
+                color: "var(--handle-color-text)",
+              }}
+            >
+              Prompt
+            </div>
           </div>
         </div>
 
@@ -180,6 +219,17 @@ export function VariantNode({ id, data, selected }: NodeProps<VariantNodeType>) 
             id="image"
             className="w-3 h-3 bg-green-500 hover:bg-green-400 transition-colors"
           />
+          {/* Output Label */}
+          <div
+            className="absolute text-[10px] font-medium whitespace-nowrap pointer-events-none text-left"
+            style={{
+              left: `calc(100% + 8px)`,
+              top: "calc(50% - 7px)",
+              color: "var(--handle-color-image)",
+            }}
+          >
+            Images
+          </div>
         </div>
 
         {/* Mode Selector */}
@@ -187,16 +237,17 @@ export function VariantNode({ id, data, selected }: NodeProps<VariantNodeType>) 
           <label className="text-[10px] text-neutral-400 mb-1 block">Mode</label>
           <select
             value={nodeData.variantMode || "demographics"}
-            onChange={(e) => updateNodeData(id, { variantMode: e.target.value as "demographics" | "style" })}
+            onChange={(e) => updateNodeData(id, { variantMode: e.target.value as "demographics" | "style" | "reframe" })}
             className="w-full bg-neutral-900 border border-neutral-800 rounded p-1.5 text-[10px] text-neutral-300 focus:outline-none"
           >
             <option value="demographics">Demographics</option>
             <option value="style">Style</option>
+            <option value="reframe">Reframe</option>
           </select>
         </div>
 
         {/* Attribute Selectors */}
-        {!isStyleMode && (
+        {nodeData.variantMode === "demographics" && (
           <>
             <MultiSelect
               label="Ethnicity"
@@ -214,12 +265,21 @@ export function VariantNode({ id, data, selected }: NodeProps<VariantNodeType>) 
           </>
         )}
 
-        {isStyleMode && (
+        {nodeData.variantMode === "style" && (
           <MultiSelect
             label="Styles"
             options={STYLES}
             selected={nodeData.styles || []}
             onChange={(s) => updateNodeData(id, { styles: s })}
+          />
+        )}
+
+        {nodeData.variantMode === "reframe" && (
+          <MultiSelect
+            label="Perspectives"
+            options={PERSPECTIVES}
+            selected={nodeData.perspectives || []}
+            onChange={(s) => updateNodeData(id, { perspectives: s })}
           />
         )}
 

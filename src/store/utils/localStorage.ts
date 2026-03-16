@@ -6,6 +6,7 @@ export const COST_DATA_STORAGE_KEY = "node-banana-workflow-costs";
 export const GENERATE_IMAGE_DEFAULTS_KEY = "node-banana-nanoBanana-defaults";
 export const PROVIDER_SETTINGS_KEY = "node-banana-provider-settings";
 export const RECENT_MODELS_KEY = "node-banana-recent-models";
+export const STORAGE_KEY_USER_AVATARS = "node-banana-user-avatars";
 
 // Maximum recent models to store (show 4 in UI, keep 8 for persistence)
 export const MAX_RECENT_MODELS = 8;
@@ -143,6 +144,34 @@ export const getRecentModels = (): RecentModel[] => {
 export const saveRecentModels = (models: RecentModel[]): void => {
   if (typeof window === "undefined") return;
   localStorage.setItem(RECENT_MODELS_KEY, JSON.stringify(models));
+};
+
+// User Avatars helpers
+export interface StoredAvatar {
+  id: string;
+  name: string;
+  description: string;
+  previewUrl: string;
+  gender: 'male' | 'female' | 'other';
+  category: 'family' | 'professional' | 'creative' | 'solo';
+}
+
+export const getUserAvatars = (): StoredAvatar[] => {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem(STORAGE_KEY_USER_AVATARS);
+  if (stored) {
+    try {
+      return JSON.parse(stored) as StoredAvatar[];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+export const saveUserAvatars = (avatars: StoredAvatar[]): void => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY_USER_AVATARS, JSON.stringify(avatars));
 };
 
 // Workflow ID generator

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import fs from "fs";
+import path from "path";
 import { GenerateRequest, GenerateResponse, ModelType } from "@/types";
 
 export const maxDuration = 300; // 5 minute timeout for Gemini API calls
@@ -7,8 +9,8 @@ export const dynamic = 'force-dynamic'; // Ensure this route is always dynamic
 
 // Map model types to Gemini model IDs
 const MODEL_MAP: Record<ModelType, string> = {
-  "nano-banana": "gemini-2.5-flash-image", // Updated to correct model name
-  "nano-banana-pro": "gemini-3-pro-image-preview",
+  "nano-banana": "gemini-2.5-flash-image", // User specified
+  "nano-banana-pro": "gemini-3-pro-image-preview", // User specified
 };
 
 export async function POST(request: NextRequest) {
@@ -34,8 +36,11 @@ export async function POST(request: NextRequest) {
     const body: GenerateRequest = await request.json();
     const { images, prompt, model = "nano-banana-pro", aspectRatio, resolution, useGoogleSearch, numberOfImages = 1 } = body;
 
+    const resolvedModel = MODEL_MAP[model as ModelType] || "gemini-2.5-flash-image"; // Default to 2.5 Flash Image if unknown
+
     console.log(`[API:${requestId}] Request parameters:`);
-    console.log(`[API:${requestId}]   - Model: ${model} -> ${MODEL_MAP[model]}`);
+    console.log(`[API:${requestId}]   - Input Model: ${model}`);
+    console.log(`[API:${requestId}]   - Resolved Model: ${resolvedModel}`);
     console.log(`[API:${requestId}]   - Images count: ${images?.length || 0}`);
     console.log(`[API:${requestId}]   - Prompt length: ${prompt?.length || 0} chars`);
     console.log(`[API:${requestId}]   - Aspect Ratio: ${aspectRatio || 'default'}`);
@@ -55,8 +60,39 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[API:${requestId}] Extracting image data...`);
-    // Extract base64 data and MIME types from data URLs
-    const imageData = (images || []).map((image, idx) => {
+    // Extract base64 data and MIME types from data URLs or local paths
+    const imageData = await Promise.all((images || []).map(async (image, idx) => {
+      // Handle local paths (e.g. /avatars/solo-5.png or /api/avatar/image/...)
+      if (image.startsWith("/")) {
+        try {
+          let filePath = "";
+          if (image.startsWith("/api/avatar/image/")) {
+            // Map dynamic avatar route to filesystem
+            const filename = path.basename(image);
+            filePath = path.join(process.cwd(), "public", "user-avatars", filename);
+          } else {
+            // Default public mapping
+            filePath = path.join(process.cwd(), "public", image);
+          }
+
+          if (fs.existsSync(filePath)) {
+            const fileBuffer = await fs.promises.readFile(filePath);
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeType = ext === ".png" ? "image/png" :
+              ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
+                ext === ".webp" ? "image/webp" : "image/png";
+            const base64Data = fileBuffer.toString("base64");
+            console.log(`[API:${requestId}]   Image ${idx + 1}: Loaded local file ${image}, ${mimeType}, ${(base64Data.length / 1024).toFixed(2)}KB`);
+            return { data: base64Data, mimeType };
+          } else {
+            console.warn(`[API:${requestId}]   Image ${idx + 1}: Local file not found ${filePath}`);
+          }
+        } catch (err) {
+          console.error(`[API:${requestId}]   Image ${idx + 1}: Error reading local file ${image}:`, err);
+        }
+      }
+
+    // Handle Data URLs
       if (image.includes("base64,")) {
         const [header, data] = image.split("base64,");
         // Extract MIME type from header (e.g., "data:image/png;" -> "image/png")
@@ -65,9 +101,11 @@ export async function POST(request: NextRequest) {
         console.log(`[API:${requestId}]   Image ${idx + 1}: ${mimeType}, ${(data.length / 1024).toFixed(2)}KB base64`);
         return { data, mimeType };
       }
-      console.log(`[API:${requestId}]   Image ${idx + 1}: No base64 header, assuming PNG, ${(image.length / 1024).toFixed(2)}KB`);
+
+      // Handle raw base64 (fallback) or remote URLs (not supported yet really, but passing through)
+      console.log(`[API:${requestId}]   Image ${idx + 1}: No base64 header or local path, assuming raw base64 PNG, ${(image.length / 1024).toFixed(2)}KB`);
       return { data: image, mimeType: "image/png" };
-    });
+    }));
 
     // Initialize Gemini client
     console.log(`[API:${requestId}] Initializing Gemini client...`);
@@ -127,7 +165,7 @@ export async function POST(request: NextRequest) {
     const geminiStartTime = Date.now();
 
     const response = await ai.models.generateContent({
-      model: MODEL_MAP[model],
+      model: resolvedModel,
       contents: [
         {
           role: "user",

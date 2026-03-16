@@ -1,5 +1,6 @@
 import { WorkflowFile } from "@/store/workflowStore";
 import { NodeType, WorkflowNodeData } from "@/types";
+import { defaultNodeDimensions, createDefaultNodeData } from "@/store/utils/nodeDefaults";
 
 interface ValidationError {
   path: string;
@@ -25,16 +26,8 @@ const VALID_NODE_TYPES: NodeType[] = [
 const VALID_HANDLE_TYPES = ["image", "text", "reference"];
 
 // Default node dimensions
-const DEFAULT_DIMENSIONS: Record<NodeType, { width: number; height: number }> = {
-  imageInput: { width: 300, height: 280 },
-  annotation: { width: 300, height: 280 },
-  prompt: { width: 320, height: 220 },
-  nanoBanana: { width: 300, height: 300 },
-  generateVideo: { width: 300, height: 300 },
-  llmGenerate: { width: 320, height: 360 },
-  splitGrid: { width: 300, height: 320 },
-  output: { width: 320, height: 320 },
-};
+// Default node dimensions
+const DEFAULT_DIMENSIONS = defaultNodeDimensions;
 
 /**
  * Validate a workflow JSON object
@@ -184,88 +177,7 @@ export function validateWorkflowJSON(workflow: unknown): ValidationResult {
   return { valid: errors.length === 0, errors };
 }
 
-/**
- * Create default node data based on type
- */
-function createDefaultNodeData(type: NodeType): WorkflowNodeData {
-  switch (type) {
-    case "imageInput":
-      return {
-        image: null,
-        filename: null,
-        dimensions: null,
-      };
-    case "annotation":
-      return {
-        sourceImage: null,
-        annotations: [],
-        outputImage: null,
-      };
-    case "prompt":
-      return {
-        prompt: "",
-      };
-    case "nanoBanana":
-      return {
-        inputImages: [],
-        inputPrompt: null,
-        outputImage: null,
-        aspectRatio: "1:1",
-        resolution: "1K",
-        model: "nano-banana-pro",
-        useGoogleSearch: false,
-        status: "idle",
-        error: null,
-        imageHistory: [],
-        selectedHistoryIndex: 0,
-      };
-    case "generateVideo":
-      return {
-        inputImages: [],
-        inputPrompt: null,
-        outputVideo: null,
-        selectedModel: undefined,
-        status: "idle",
-        error: null,
-        videoHistory: [],
-        selectedVideoHistoryIndex: 0,
-      };
-    case "llmGenerate":
-      return {
-        inputPrompt: null,
-        inputImages: [],
-        outputText: null,
-        provider: "google",
-        model: "gemini-3-flash-preview",
-        temperature: 0.7,
-        maxTokens: 8192,
-        status: "idle",
-        error: null,
-      };
-    case "splitGrid":
-      return {
-        sourceImage: null,
-        targetCount: 6,
-        defaultPrompt: "",
-        generateSettings: {
-          aspectRatio: "1:1",
-          resolution: "1K",
-          model: "nano-banana-pro",
-          useGoogleSearch: false,
-        },
-        childNodeIds: [],
-        gridRows: 2,
-        gridCols: 3,
-        isConfigured: false,
-        status: "idle",
-        error: null,
-      };
-    case "output":
-      return {
-        image: null,
-      };
-  }
-}
+
 
 /**
  * Repair a workflow JSON object by filling in missing fields and removing invalid edges

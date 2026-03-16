@@ -15,6 +15,7 @@ import {
   AICriticNodeData,
   VariantNodeData,
   VideoStitchNodeData,
+  AudioNodeData,
 } from "@/types";
 import { loadGenerateImageDefaults } from "./localStorage";
 
@@ -35,6 +36,7 @@ export const defaultNodeDimensions: Record<NodeType, { width: number; height: nu
   aiCritic: { width: 300, height: 350 },
   variant: { width: 300, height: 600 },
   videoStitch: { width: 300, height: 400 },
+  audio: { width: 300, height: 280 },
 };
 
 /**
@@ -178,6 +180,7 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         ethnicities: [],
         genders: [],
         styles: [],
+        perspectives: [],
         variantCount: 1,
         ratio: "1:1",
         gridSize: "2x2",
@@ -193,5 +196,13 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
         status: "idle",
         error: null,
       } as VideoStitchNodeData;
+    case "audio":
+      return {
+        audio: null,
+        filename: null,
+        status: "idle",
+        error: null,
+        inputPrompt: "",
+      } as AudioNodeData;
   }
 };

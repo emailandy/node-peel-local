@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "id": "wf_accidental_smartphone_grid",
+  "name": "Accidental Smartphone Contact Sheet",
+  "nodes": [
+    {
+      "id": "imageInput-1",
+      "type": "imageInput",
+      "position": {
+        "x": -93.37354891233626,
+        "y": -224.5222866601951
+      },
+      "data": {
+        "image": null,
+        "filename": "download.png",
+        "dimensions": {
+          "width": 768,
+          "height": 1376
+        },
+        "customTitle": "Reference (Age & Demeanor)",
+        "imageRef": "img-mkcx7b9r-5fbrhj"
+      },
+      "style": {
+        "width": 300,
+        "height": 280
+      },
+      "groupId": "group-1",
+      "measured": {
+        "width": 300,
+        "height": 280
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "prompt-1",
+      "type": "prompt",
+      "position": {
+        "x": -124.07272592015256,
+        "y": 63.29309228322334
+      },
+      "data": {
+        "prompt": "Ultra-realistic smartphone photograph — quad-frame contact sheet. Single image with four vertical 9:16 frames in a 2×2 grid, captured in a rushed handheld phone burst. Subject: completely fictional adult woman, non-identifiable. Reference image used ONLY for general age range and neutral demeanor — no resemblance, no face copying. Facial details partially unreadable in every frame due to motion blur, flash overexposure, autofocus failure, and rolling-shutter ghosting. Scene: nighttime Tokyo sidewalk beside a plain white ceramic tile building during a fireworks event. Fireworks appear only as distant, cropped, smeared light streaks or blown-out blobs — never centered, never celebratory. Camera failure: modern smartphone, rushed handheld capture. Unpredictable flash dominates. Missed autofocus. Extreme camera shake. Heavy directional blur, ghosting, double edges, harsh clipped highlights, uneven exposure, strong noise. Nothing clean or sharp. Frame sequence: 1. Walking past side-on, unaware. 2. Sudden head turn, surprised, face smeared by motion. 3. Hand reflexively blocking the lens, shy restrained smile, strong ghosting. 4. Almost out of frame, faint embarrassed smile, extreme blur. Mood: intrusive, awkward, fleeting — images never meant to exist. Negative: anime, illustration, cinematic fireworks, festival mood, neon, studio or beauty lighting, sharp focus, posed photography, professional camera, face copy, identity match, beauty filters, perfect symmetry.",
+        "customTitle": "Contact Sheet Instructions"
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "groupId": "group-1",
+      "measured": {
+        "width": 320,
+        "height": 220
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "nanoBanana-1",
+      "type": "nanoBanana",
+      "position": {
+        "x": 324.56542587024774,
+        "y": -66.82354112611631
+      },
+      "data": {
+        "inputImages": [],
+        "inputPrompt": "Ultra-realistic smartphone photograph — quad-frame contact sheet. Single image with four vertical 9:16 frames in a 2×2 grid, captured in a rushed handheld phone burst. Subject: completely fictional adult woman, non-identifiable. Reference image used ONLY for general age range and neutral demeanor — no resemblance, no face copying. Facial details partially unreadable in every frame due to motion blur, flash overexposure, autofocus failure, and rolling-shutter ghosting. Scene: nighttime Tokyo sidewalk beside a plain white ceramic tile building during a fireworks event. Fireworks appear only as distant, cropped, smeared light streaks or blown-out blobs — never centered, never celebratory. Camera failure: modern smartphone, rushed handheld capture. Unpredictable flash dominates. Missed autofocus. Extreme camera shake. Heavy directional blur, ghosting, double edges, harsh clipped highlights, uneven exposure, strong noise. Nothing clean or sharp. Frame sequence: 1. Walking past side-on, unaware. 2. Sudden head turn, surprised, face smeared by motion. 3. Hand reflexively blocking the lens, shy restrained smile, strong ghosting. 4. Almost out of frame, faint embarrassed smile, extreme blur. Mood: intrusive, awkward, fleeting — images never meant to exist. Negative: anime, illustration, cinematic fireworks, festival mood, neon, studio or beauty lighting, sharp focus, posed photography, professional camera, face copy, identity match, beauty filters, perfect symmetry.",
+        "outputImage": null,
+        "aspectRatio": "1:1",
+        "resolution": "2K",
+        "model": "nano-banana-pro",
+        "useGoogleSearch": false,
+        "status": "complete",
+        "error": null,
+        "imageHistory": [
+          {
+            "id": "1768328568036",
+            "timestamp": 1768328568036,
+            "prompt": "Ultra-realistic smartphone photograph — quad-frame contact sheet. Single image with four vertical 9:16 frames in a 2×2 grid, captured in a rushed handheld phone burst. Subject: completely fictional adult woman, non-identifiable. Reference image used ONLY for general age range and neutral demeanor — no resemblance, no face copying. Facial details partially unreadable in every frame due to motion blur, flash overexposure, autofocus failure, and rolling-shutter ghosting. Scene: nighttime Tokyo sidewalk beside a plain white ceramic tile building during a fireworks event. Fireworks appear only as distant, cropped, smeared light streaks or blown-out blobs — never centered, never celebratory. Camera failure: modern smartphone, rushed handheld capture. Unpredictable flash dominates. Missed autofocus. Extreme camera shake. Heavy directional blur, ghosting, double edges, harsh clipped highlights, uneven exposure, strong noise. Nothing clean or sharp. Frame sequence: 1. Walking past side-on, unaware. 2. Sudden head turn, surprised, face smeared by motion. 3. Hand reflexively blocking the lens, shy restrained smile, strong ghosting. 4. Almost out of frame, faint embarrassed smile, extreme blur. Mood: intrusive, awkward, fleeting — images never meant to exist. Negative: anime, illustration, cinematic fireworks, festival mood, neon, studio or beauty lighting, sharp focus, posed photography, professional camera, face copy, identity match, beauty filters, perfect symmetry.",
+            "aspectRatio": "1:1",
+            "model": "nano-banana-pro"
+          },
+          {
+            "id": "1768328428379",
+            "timestamp": 1768328428379,
+            "prompt": "Ultra-realistic accidental smartphone photograph — quad-frame contact sheet. Single image with four vertical 9:16 frames in a 2×2 grid, captured in a rushed handheld phone burst. Subject: completely fictional adult woman, non-identifiable. Reference image used ONLY for general age range and neutral demeanor — no resemblance, no face copying. Facial details partially unreadable in every frame due to motion blur, flash overexposure, autofocus failure, and rolling-shutter ghosting. Scene: nighttime Tokyo sidewalk beside a plain white ceramic tile building during a fireworks event. Fireworks appear only as distant, cropped, smeared light streaks or blown-out blobs — never centered, never celebratory. Camera failure: modern smartphone, rushed handheld capture. Unpredictable flash dominates. Missed autofocus. Extreme camera shake. Heavy directional blur, ghosting, double edges, harsh clipped highlights, uneven exposure, strong noise. Nothing clean or sharp. Frame sequence: 1. Walking past side-on, unaware. 2. Sudden head turn, surprised, face smeared by motion. 3. Hand reflexively blocking the lens, shy restrained smile, strong ghosting. 4. Almost out of frame, faint embarrassed smile, extreme blur. Mood: intrusive, awkward, fleeting — images never meant to exist. Negative: anime, illustration, cinematic fireworks, festival mood, neon, studio or beauty lighting, sharp focus, posed photography, professional camera, face copy, identity match, beauty filters, perfect symmetry.",
+            "aspectRatio": "1:1",
+            "model": "nano-banana-pro"
+          },
+          {
+            "id": "1768328327208",
+            "timestamp": 1768328327208,
+            "prompt": "Ultra-realistic accidental smartphone photograph — quad-frame contact sheet. Single image with four vertical 9:16 frames in a 2×2 grid, captured in a rushed handheld phone burst. Subject: completely fictional adult woman, non-identifiable. Reference image used ONLY for general age range and neutral demeanor — no resemblance, no face copying. Facial details partially unreadable in every frame due to motion blur, flash overexposure, autofocus failure, and rolling-shutter ghosting. Scene: nighttime Tokyo sidewalk beside a plain white ceramic tile building during a fireworks event. Fireworks appear only as distant, cropped, smeared light streaks or blown-out blobs — never centered, never celebratory. Camera failure: modern smartphone, rushed handheld capture. Unpredictable flash dominates. Missed autofocus. Extreme camera shake. Heavy directional blur, ghosting, double edges, harsh clipped highlights, uneven exposure, strong noise. Nothing clean or sharp. Frame sequence: 1. Walking past side-on, unaware. 2. Sudden head turn, surprised, face smeared by motion. 3. Hand reflexively blocking the lens, shy restrained smile, strong ghosting. 4. Almost out of frame, faint embarrassed smile, extreme blur. Mood: intrusive, awkward, fleeting — images never meant to exist. Negative: anime, illustration, cinematic fireworks, festival mood, neon, studio or beauty lighting, sharp focus, posed photography, professional camera, face copy, identity match, beauty filters, perfect symmetry.",
+            "aspectRatio": "1:1",
+            "model": "nano-banana-pro"
+          },
+          {
+            "id": "1768328174738",
+            "timestamp": 1768328174738,
+            "prompt": "Ultra-realistic accidental smartphone photograph — quad-frame contact sheet. Single image with four vertical 9:16 frames in a 2×2 grid, captured in a rushed handheld phone burst. Subject: completely fictional adult woman, non-identifiable. Reference image used ONLY for general age range and neutral demeanor — no resemblance, no face copying. Facial details partially unreadable in every frame due to motion blur, flash overexposure, autofocus failure, and rolling-shutter ghosting. Scene: nighttime Tokyo sidewalk beside a plain white ceramic tile building during a fireworks event. Fireworks appear only as distant, cropped, smeared light streaks or blown-out blobs — never centered, never celebratory. Camera failure: modern smartphone, rushed handheld capture. Unpredictable flash dominates. Missed autofocus. Extreme camera shake. Heavy directional blur, ghosting, double edges, harsh clipped highlights, uneven exposure, strong noise. Nothing clean or sharp. Frame sequence: 1. Walking past side-on, unaware. 2. Sudden head turn, surprised, face smeared by motion. 3. Hand reflexively blocking the lens, shy restrained smile, strong ghosting. 4. Almost out of frame, faint embarrassed smile, extreme blur. Mood: intrusive, awkward, fleeting — images never meant to exist. Negative: anime, illustration, cinematic fireworks, festival mood, neon, studio or beauty lighting, sharp focus, posed photography, professional camera, face copy, identity match, beauty filters, perfect symmetry.",
+            "aspectRatio": "1:1",
+            "model": "nano-banana-pro"
+          }
+        ],
+        "selectedHistoryIndex": 0,
+        "customTitle": "Generate 2x2 Grid",
+        "inputImageRefs": [
+          "img-mkcx7b9r-5fbrhj"
+        ],
+        "outputImageRef": "img-mkcx7bbz-txsuiw"
+      },
+      "style": {
+        "width": 300,
+        "height": 300
+      },
+      "measured": {
+        "width": 300,
+        "height": 300
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "output-1",
+      "type": "output",
+      "position": {
+        "x": 625.0428673867796,
+        "y": -111.48594153680207
+      },
+      "data": {
+        "image": null,
+        "customTitle": "Final Contact Sheet",
+        "imageRef": "img-mkcx7bbz-txsuiw"
+      },
+      "style": {
+        "width": 320,
+        "height": 320
+      },
+      "measured": {
+        "width": 320,
+        "height": 320
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-imageInput-1-nanoBanana-1-image-image",
+      "source": "imageInput-1",
+      "sourceHandle": "image",
+      "target": "nanoBanana-1",
+      "targetHandle": "image",
+      "selected": false
+    },
+    {
+      "id": "edge-prompt-1-nanoBanana-1-text-text",
+      "source": "prompt-1",
+      "sourceHandle": "text",
+      "target": "nanoBanana-1",
+      "targetHandle": "text",
+      "selected": false
+    },
+    {
+      "id": "edge-nanoBanana-1-output-1-image-image",
+      "source": "nanoBanana-1",
+      "sourceHandle": "image",
+      "target": "output-1",
+      "targetHandle": "image",
+      "selected": false
+    }
+  ],
+  "edgeStyle": "curved",
+  "groups": {
+    "group-1": {
+      "id": "group-1",
+      "name": "Input Configuration",
+      "color": "blue",
+      "position": {
+        "x": -179.22823507426537,
+        "y": -255.7066620425011
+      },
+      "size": {
+        "width": 461.0101953160408,
+        "height": 680
+      }
+    }
+  }
+}

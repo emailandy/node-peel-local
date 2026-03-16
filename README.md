@@ -1,117 +1,84 @@
-# Node Banana
+# Peel - Multimodal AI Workflow Editor 🍌
 
-> **Important note:** This is in early development, it probably has some issues. Use Chrome. For support or raising any issues join the [discord](https://discord.com/invite/89Nr6EKkTf). See the [docs](https://node-banana-docs.vercel.app/) for help, installation guides, and user guides.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![React Flow](https://img.shields.io/badge/React_Flow-12-blue)](https://reactflow.dev/)
 
-Node Banana is node-based workflow application for generating images with Nano Banana Pro. Build image generation pipelines by connecting nodes on a visual canvas. Recent Fal and Replicate integration allows for complex image and video pipelines from any provider, but be aware this is still in testing. 
+Peel (formerly Node Banana) is a high-performance, multimodal visual workflow engine designed for cinematic AI generation. It orchestrates state-of-the-art models from Google (Gemini, Veo, Lyria), OpenAI, and others into seamless, repeatable pipelines.
 
-Built mainly with Opus 4.5.
+![Peel Dashboard](file:///Users/emailandy/.gemini/jetski/brain/9add2638-f336-431c-9007-d9d8b0da69d1/node_banana_app_loaded_1773589923057.png)
 
-![Node Banana Screenshot](public/node-banana.png)
+## 🚀 Key Features
 
-## Features
+### 🎨 Visual Canvas & Orchestration
+- **Node-Based Editor**: Drag-and-drop orchestration powered by `@xyflow/react`.
+- **Topological Execution**: Smart dependency sorting ensures nodes execute in the right order.
+- **Top-Tier Annotations**: Integrated Konva.js drawing tools for precision mask and guidance creation.
 
-- **Prompt to Workflow** - Generate complete workflows from natural language descriptions or choose from preset templates (Gemini only for now)
-- **Visual Node Editor** - Drag-and-drop nodes onto an infinite canvas with pan and zoom
-- **Image Annotation** - Full-screen editor with drawing tools (rectangles, circles, arrows, freehand, text)
-- **AI Image Generation** - Generate images using Google Gemini models
-- **Text Generation** - Generate text using Google Gemini or OpenAI models
-- **Workflow Chaining** - Connect multiple nodes to create complex pipelines
-- **Save/Load Workflows** - Export and import workflows as JSON files
-- **Group Locking** - Lock node groups to skip them during execution
+### 🎬 Multimodal Generation
+- **Image Generation**: Native support for `gemini-2.5-flash` and `gemini-3-pro-image-preview`.
+- **Video Generation**: Cinematic workflows using Google **Veo 3.0/3.1** with fast preview paths.
+- **Audio Generation**: Real-time music and soundscape visualization via Google **Lyria**.
+- **LLM Intelligence**: Orchestrate complex instructions using Gemini and GPT-4.1.
 
-## Multi-Provider Support (Beta)
+### 🛠️ Advanced Tools & Guardrails
+- **AI Critic**: automated quality control and guardrail nodes that pass/fail generations based on custom criteria.
+- **Demographic Variants**: Generate diverse character and style variants with a single input.
+- **FFmpeg Stitching**: Professional-grade video/audio merging service built directly into the workflow.
 
-In addition to Google Gemini, Node Banana now supports:
-- **Replicate** - Access thousands of open-source models
-- **fal.ai** - Fast inference for image and video generation
-
-Configure API keys in Project Settings to enable these providers.
-
-## Tech Stack
+## 🛠️ Technical Stack
 
 - **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Node Editor**: @xyflow/react (React Flow)
-- **Canvas**: Konva.js / react-konva
-- **State Management**: Zustand
-- **Styling**: Tailwind CSS
-- **AI**: Google Gemini API, OpenAI API, Replicate (Beta), fal.ai (Beta)
+- **State**: Zustand (Single-store pattern)
+- **Style**: Tailwind CSS v4
+- **Canvas**: Konva.js
+- **Media**: FFmpeg (fluent-ffmpeg)
+- **Runtime**: Node.js 20+
 
-## Getting Started
+## 🏁 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm
-
-### Environment Variables
-
-Create a `.env.local` file in the root directory:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key
-OPENAI_API_KEY=your_openai_api_key      # Optional, for OpenAI LLM provider
-REPLICATE_API_KEY=your_replicate_api_key  # Optional, beta
-FAL_API_KEY=your_fal_api_key              # Optional, beta
-```
+- **Node.js**: `v20.x` or higher
+- **FFmpeg**: Required for video/audio stitching nodes.
 
 ### Installation
 
-```bash
-npm install
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/peel.git
+   cd peel
+   ```
 
-### Development
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run dev
-```
+3. Configure environment variables in `.env.local`:
+   ```env
+   GEMINI_API_KEY=your_key_here
+   OPENAI_API_KEY=your_key_here
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Launch the development server:
+   ```bash
+   npm run dev
+   ```
 
-### Build
+## ⌨️ Productivity Shortcuts
 
-```bash
-npm run build
-npm run start
-```
+- `Cmd/Ctrl + Enter` - Execute workflow
+- `Cmd/Ctrl + C / V` - Copy and paste nodes
+- `Shift + P` - Instant Prompt node
+- `Shift + G` - Instant Generate node
+- `H / V` - Stack nodes selection horizontally or vertically
+- `G` - Snap selection to grid
 
-## Example Workflows
+## 📜 License
 
-The `/examples` directory contains some example workflow files from my personal projects. To try them:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-1. Start the dev server with `npm run dev`
-2. Drag any `.json` file from the `/examples` folder into the browser window
-3. Make sure you review each of the prompts before starting, these are fairly targetted to the examples. 
+---
 
-## Usage
-
-1. **Add nodes** - Click the floating action bar to add nodes to the canvas
-2. **Connect nodes** - Drag from output handles to input handles (matching types only)
-3. **Configure nodes** - Adjust settings like model, aspect ratio, or drawing tools
-4. **Run workflow** - Click the Run button to execute the pipeline
-5. **Save/Load** - Use the header menu to save or load workflows
-
-## Connection Rules
-
-- **Image** handles connect to **Image** handles only
-- **Text** handles connect to **Text** handles only
-- Image inputs on generation nodes accept multiple connections
-- Text inputs accept single connections
-
-## Testing
-
-Run the test suite with:
-
-```bash
-npm test              # Watch mode
-npm run test:run      # Single run
-npm run test:coverage # With coverage report
-```
-
-## Contributions
-PRs are welcome, please pull the latest changes from develop before creating a PR and make it to the develop branch, not master. Not that I'm primarily making this for my own workflows, if the PR conflicts with my own plans I'll politely reject it. If you want to collaborate, consider joining the Discord and we can hash something out. 
-
-## License
-
-MIT
+Built with ❤️ for the future of cinematic AI.

@@ -5,10 +5,10 @@ import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { LLMGenerateNodeData, LLMProvider, LLMModelType } from "@/types";
+import { useToast } from "@/components/Toast";
 
 const PROVIDERS: { value: LLMProvider; label: string }[] = [
   { value: "google", label: "Google" },
-  { value: "openai", label: "OpenAI" },
 ];
 
 const MODELS: Record<LLMProvider, { value: LLMModelType; label: string }[]> = {
@@ -17,10 +17,7 @@ const MODELS: Record<LLMProvider, { value: LLMModelType; label: string }[]> = {
     { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
     { value: "gemini-3-pro-preview", label: "Gemini 3.0 Pro" },
   ],
-  openai: [
-    { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
-    { value: "gpt-4.1-nano", label: "GPT-4.1 Nano" },
-  ],
+  openai: [], // Deprecated/Removed
 };
 
 type LLMGenerateNodeType = Node<LLMGenerateNodeData, "llmGenerate">;
@@ -28,6 +25,7 @@ type LLMGenerateNodeType = Node<LLMGenerateNodeData, "llmGenerate">;
 export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNodeType>) {
   const nodeData = data;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
+  const { show } = useToast();
 
   const handleProviderChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -66,8 +64,20 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
     updateNodeData(id, { outputText: null, status: "idle", error: null });
   }, [id, updateNodeData]);
 
+  const handleCopy = useCallback(() => {
+    if (nodeData.outputText) {
+      navigator.clipboard.writeText(nodeData.outputText);
+      show("Copied to clipboard", "success");
+    }
+  }, [nodeData.outputText, show]);
+
+
+
   const provider = nodeData.provider || "google";
-  const availableModels = MODELS[provider] || MODELS.google;
+  // If provider is openai (deprecated) or invalid, fallback to google models
+  const rawModels = MODELS[provider];
+  const availableModels = (rawModels && rawModels.length > 0) ? rawModels : MODELS.google;
+
   const model = availableModels.some(m => m.value === nodeData.model)
     ? nodeData.model
     : availableModels[0].value;
@@ -109,7 +119,7 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
 
       <div className="flex-1 flex flex-col min-h-0 gap-2">
         {/* Output preview area */}
-        <div className="nodrag nopan nowheel relative w-full flex-1 min-h-[80px] border border-dashed border-neutral-600 rounded p-2 overflow-auto">
+        <div className="nodrag nopan nowheel relative w-full flex-1 min-h-[80px] border border-dashed border-neutral-600 rounded bg-black/20 overflow-hidden flex flex-col">
           {nodeData.status === "loading" ? (
             <div className="h-full flex items-center justify-center">
               <svg
@@ -133,35 +143,52 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
               </svg>
             </div>
           ) : nodeData.status === "error" ? (
-            <span className="text-[10px] text-red-400">
-              {nodeData.error || "Failed"}
-            </span>
+              <div className="p-2">
+                <span className="text-[10px] text-red-400">
+                  {nodeData.error || "Failed"}
+                </span>
+              </div>
           ) : nodeData.outputText ? (
             <>
-              <p className="text-[10px] text-neutral-300 whitespace-pre-wrap break-words pr-6">
-                {nodeData.outputText}
-              </p>
-              <div className="absolute top-1 right-1 flex gap-1">
+                  {/* Toolbar - always visible */}
+                  <div className="absolute top-2 right-2 flex gap-1 z-10 bg-neutral-900/80 backdrop-blur-sm rounded p-0.5 border border-neutral-800">
+                    <button
+                      onClick={handleCopy}
+                      className="w-5 h-5 hover:bg-neutral-700/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+                      title="Copy to clipboard"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+
                 <button
-                  onClick={handleRegenerate}
-                  disabled={isRunning}
-                  className="w-5 h-5 bg-neutral-900/80 hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-                  title="Regenerate"
+                      onClick={handleRegenerate}
+                      disabled={isRunning}
+                      className="w-5 h-5 hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+                      title="Regenerate"
                 >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
+                      </svg>
                 </button>
                 <button
-                  onClick={handleClearOutput}
-                  className="w-5 h-5 bg-neutral-900/80 hover:bg-red-600/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-                  title="Clear output"
+                      onClick={handleClearOutput}
+                      className="w-5 h-5 hover:bg-red-600/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+                      title="Clear output"
                 >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                      </svg>
                 </button>
               </div>
+
+                  {/* Scrollable Content */}
+                  <div className="flex-1 overflow-auto p-2">
+                    <p className="text-[10px] text-neutral-300 whitespace-pre-wrap break-words pr-6">
+                      {nodeData.outputText}
+                    </p>
+                  </div>
             </>
           ) : (
             <div className="h-full flex items-center justify-center">
@@ -172,7 +199,8 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
           )}
         </div>
 
-        {/* Provider selector */}
+        {/* Provider selector - hidden if only 1 provider */}
+        {PROVIDERS.length > 1 && (
         <select
           value={provider}
           onChange={handleProviderChange}
@@ -184,6 +212,7 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
             </option>
           ))}
         </select>
+        )}
 
         {/* Model selector */}
         <select

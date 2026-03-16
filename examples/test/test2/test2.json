@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "id": "wf_1771722213369_jiz7ndmla",
+  "name": "test2",
+  "directoryPath": "/Users/emailandy/Documents/Code/node-banana3withvideo/examples/test/test2",
+  "nodes": [
+    {
+      "id": "prompt-1",
+      "type": "prompt",
+      "position": {
+        "x": 582.3215197791912,
+        "y": 465.1554411093149
+      },
+      "data": {
+        "prompt": "Generate a 9-image Instagram 'photo dump' grid of Andy’s vacation to Mexico: a grainy mirror selfie in a linen shirt, a 100x zoom on a street taco with salsa, a blurry flash photo of a late-night tequila toast, a cinematic wide shot of a Tulum beach club, a candid laugh while wearing a straw hat, a vintage 35mm film shot of a colorful street in Oaxaca, a pet moment with a local beach dog, a glowing purple sunset over the Pacific, and a GTA 6 style loading screen poster of Andy in the center.",
+        "variableName": "subject"
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "measured": {
+        "width": 467,
+        "height": 369
+      },
+      "selected": false,
+      "dragging": false,
+      "width": 467,
+      "height": 369,
+      "resizing": false
+    },
+    {
+      "id": "audioInput-2",
+      "type": "audioInput",
+      "position": {
+        "x": 1018.3009135856462,
+        "y": 397.35158733438067
+      },
+      "data": {
+        "audioFile": null,
+        "filename": null,
+        "duration": null,
+        "format": null
+      },
+      "style": {
+        "width": 300,
+        "height": 200
+      },
+      "measured": {
+        "width": 300,
+        "height": 200
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "videoStitch-4",
+      "type": "videoStitch",
+      "position": {
+        "x": 1003.1380359629783,
+        "y": 680.4607008820292
+      },
+      "data": {
+        "clips": [],
+        "clipOrder": [],
+        "outputVideo": null,
+        "loopCount": 1,
+        "status": "idle",
+        "error": null,
+        "progress": 0,
+        "encoderSupported": true
+      },
+      "style": {
+        "width": 400,
+        "height": 280
+      },
+      "measured": {
+        "width": 400,
+        "height": 280
+      },
+      "selected": false
+    }
+  ],
+  "edges": [],
+  "edgeStyle": "curved"
+}
